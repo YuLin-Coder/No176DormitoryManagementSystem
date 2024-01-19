@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.BillFileMapper">
+
+	<resultMap type="com.silk.entity.BillFile" id="BillFile">
+		<id column="id" property="id"/>
+		<result column="bill_title"  property="billTitle"/>
+		<result column="bill_date"  property="billDate"/>
+		<result column="building_id"  property="buildingId"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.BillFile">
+		insert into tb_bill_file(
+			bill_title,
+			bill_date,
+			building_id
+		)values(
+			#{billTitle},
+			#{billDate},
+			#{buildingId}
+		)
+	</insert>
+
+	<select id="query" resultMap="BillFile">
+		select * from tb_bill_file
+		<include refid="BillFileFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_bill_file
+		<include refid="BillFileFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="BillFile">
+		select * from tb_bill_file where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_bill_file where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_bill_file set
+			bill_title=#{billTitle},
+			bill_date=#{billDate},
+			building_id=#{buildingId}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_bill_file set
+			<if test="billTitle != null and billTitle != ''"> bill_title = #{billTitle}</if>,
+			<if test="billDate != null and billDate != ''"> bill_date = #{billDate}</if>,
+			<if test="buildingId != null">building_id = #{buildingId}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="BillFileFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="billTitle != null and billTitle != ''">and bill_title = #{billTitle}</if>
+			<if test="buildingId != null">and building_id = #{buildingId}</if>
+		</where>
+	</sql>
+
+
+
+
+
+
+</mapper>

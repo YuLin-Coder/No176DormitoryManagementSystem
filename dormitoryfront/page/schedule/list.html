@@ -1,0 +1,268 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main welcome">
+
+        <div class="layui-row">
+
+            <div class="layui-col-xs9">
+                <div class="layui-card-silk-yellow-for-notification">
+                    <div class="layui-card-header silk-color-light-gray">
+                        <i class="fa fa-list-alt icon"></i> 日程清单
+                        <button class="layui-btn layui-btn-silk-light-yellow data-add-btn layui-btn-radius" lay-event="add" style="float: right;" id="addSchedule">
+                            <i class="layui-icon layui-icon-add-circle layui-btn-silk-yellow-add-circle"></i>
+                        </button>
+                    </div>
+                    <div class="layui-card-body">
+                        <div id="part2" style="width: 100%;min-height:630px">
+                            <div class="layui-row" id="my-upcoming-schedule">
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-xs3">
+                <div class="layui-card-silk-blue-for-notification">
+                    <div class="layui-card-header silk-color-light-gray">
+                        <i class="fa fa-pencil icon "></i> 统计信息
+                    </div>
+                    <div class="layui-card-body">
+                        <div style="width: 100%;min-height:200px">
+                            <div class="welcome-module" style="margin-top: 70px">
+                                <div class="layui-row layui-col-space10">
+                                    <div class="layui-col-xs6" style="text-align: center">
+                                        <div class="panel layui-bg-number">
+                                            <div class="panel-body">
+                                                <div class="panel-title">
+                                                    <h3 class="silk-color-middle-gray">待完成</h3>
+                                                </div>
+                                                <div class="panel-content">
+                                                    <h2 class="no-margins silk-color-deep-blue" id="waitForCompletion" style="margin:10px 0px 10px 0px; font-size: 40px"></h2>
+<!--                                                    <small class="silk-color-light-gray">项</small>-->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-col-xs6" style="text-align: center">
+                                        <div class="panel layui-bg-number">
+                                            <div class="panel-body">
+                                                <div class="panel-title">
+                                                    <h3 class="silk-color-middle-gray">已完成</h3>
+                                                </div>
+                                                <div class="panel-content">
+                                                    <h2 class="no-margins silk-color-light-gray-for-simple-word" id="alreadyFinished" style="margin:10px 0px 10px 0px; font-size: 40px"></h2>
+<!--                                                    <small class="silk-color-light-gray">项</small>-->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-xs3">
+                <div class="layui-card-silk-schedule-pink">
+                    <div class="layui-card-header silk-color-light-gray">
+                        <i class="fa fa-clock-o icon "></i> 临近日程
+                    </div>
+                    <div class="layui-card-body">
+                        <div style="width: 100%;min-height:275px">
+                            <div class="layui-row" id="nearest-schedule">
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+
+<script>
+    layui.use(['form', 'table','miniPage','miniAdmin','element', 'axios'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniAdmin = layui.miniAdmin,
+            axios = layui.axios,
+            miniPage = layui.miniPage;
+
+
+
+
+
+        // 1. 加载临近日程
+
+
+        // 2. 日程统计
+        axios.get('schedule/query_schedule_num_info', {}).then(function (response) {
+            console.log(response.data);
+
+            $('#waitForCompletion').html(response.data[0]);
+            $('#alreadyFinished').html(response.data[1]);
+        }).catch(function (error) {
+            layer.msg(error);
+        });
+
+
+        // 3. 即将到来的日程
+        axios.post('schedule/query_schedule', {}).then(function (response) {
+            console.log(response.data);
+            console.log("最近的日程：")
+            console.log(response.data[0])
+
+
+
+
+            let dynamicSchedule = `
+                <div class="layui-col-md12" style="margin-top: 20px">
+                    <div class="silk-card-notification">
+                        <div class="layui-card-header silk-color-deep-gray-for-notification-head">
+                            ${response.data[0].schName}
+                        </div>
+                        <span class="layui-badge pull-right layui-bg-silk-pink">${response.data[0].schLocation}</span>
+                        <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${response.data[0].schTime}</span>
+                        <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                            ${response.data[0].schContent}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('#nearest-schedule').append(dynamicSchedule);
+
+        }).catch(function (error) {
+            layer.msg(error);
+        })
+
+
+        function loadUpcomingSchedule() {
+            axios.post('schedule/query_schedule', {}).then(function (response) {
+                console.log(response.data);
+
+
+                for (let i=1; i<response.data.length; i ++){
+                    let type;
+                    // console.log(item.schContent)
+
+                    // 优先级0=一般（灰色标题），1=重要（黑色标题），2=非常重要（红色标题）
+                    if (response.data[i].schPriority === 2){
+                        type = `
+                                <div key="${response.data[i].id}" class="layui-card-header silk-color-deep-gray-for-notification-head">
+                                    ${response.data[i].schName}
+<!--                                    <button class="layui-icon layui-icon-delete pull-right silk-schedule-delete" style="margin: 3px 3px 0px 0px;" title="删除日程"></button>-->
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-pink">${response.data[i].schLocation}</span>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${response.data[i].schTime}</span>
+                                <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                                    ${response.data[i].schContent}
+                                </div>
+                        `;
+                    } else if (response.data[i].schPriority === 1){
+                        type = `
+                                <div  key="${response.data[i].id}"  class="layui-card-header silk-color-red-for-notification-head">
+                                    ${response.data[i].schName}
+<!--                                    <button class="layui-icon layui-icon-delete pull-right silk-schedule-delete" style="margin: 3px 3px 0px 0px;" title="删除日程"></button>-->
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-pink">${response.data[i].schLocation}</span>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${response.data[i].schTime}</span>
+                                <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                                    ${response.data[i].schContent}
+                                </div>
+                        `;
+                    } else if (response.data[i].schPriority === 0){
+                        type = `
+                                <div key="${response.data[i].id}" class="layui-card-header silk-color-light-gray-for-notification-head">
+                                    ${response.data[i].schName}
+<!--                                    <button class="layui-icon layui-icon-delete pull-right silk-schedule-delete" style="margin: 3px 3px 0px 0px;" title="删除日程"></button>-->
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-pink">${response.data[i].schLocation}</span>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${response.data[i].schTime}</span>
+                                <div class="layui-card-body silk-color-light-gray-for-passed-notification-body" style="margin: 10px 10px 0px 10px;">
+                                    ${response.data[i].schContent}
+                                </div>
+                        `;
+                    }
+
+                    let dynamicSchedule = `
+                        <div class="layui-col-md6">
+                            <div class="silk-card-notification">
+                                ${type}
+                            </div>
+                        </div>
+                    `;
+
+                    let dynamicScheduleObj = $(dynamicSchedule);
+
+                    // 点击后删除该日程
+                    dynamicScheduleObj.find('.silk-schedule-delete').click(function (event) {
+                        console.log(dynamicSchedule);
+                        console.log(dynamicSchedule);
+                        console.log(dynamicSchedule);
+                        // event.stopPropagation();
+                        layer.confirm("确定要删除吗？", function (index) {
+                            let scheduleIds =  dynamicScheduleObj.find('div').attr("key");        // 获取room的ID
+                            axios.get('schedule/delete?ids=' + scheduleIds).then(function (response) {
+                                layer.msg(response.msg);
+                                dynamicScheduleObj.remove();               // 前端移除该对象
+                                layer.close(index);
+                            }).catch(function (error) {
+                                layer.msg(error);
+                            });
+                        })
+                    });
+
+
+                    $('#my-upcoming-schedule').append(dynamicSchedule);
+
+                }
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+
+        loadUpcomingSchedule();
+
+
+
+        $('#addSchedule').click(function () {
+            // 添加事件
+            let content = miniPage.getHrefContent('schedule/add.html');
+            let index = layer.open({
+                title: '添加日程',
+                type: 1,
+                shade: 0.3,
+                maxmin:true,                    // 显示最大最小化的按钮
+                shadeClose: true,
+                area: ['600px', '600px'],       // 原始值 area: [openWH[0] + 'px', openWH[1] + 'px'],
+                offset: 'auto',                 // 原始值 offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                content: content,
+
+                // end: function () {
+                //     // todo 修改为局部刷新房间通知
+                //     window.parent.location.reload();// 添加结束后触发button，使得房间列表重新加载
+                // }
+
+                // end: function () {
+                //     $('#room-notification').reload();
+                // }
+            });
+
+            $(window).on("resize", function () {
+                layer.full(index);
+            });
+        });
+    });
+
+</script>

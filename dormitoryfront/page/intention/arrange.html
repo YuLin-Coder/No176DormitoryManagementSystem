@@ -1,0 +1,160 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main welcome">
+
+        <div class="layui-row layui-col-space10">
+<!--            <div class="layui-col-md4">-->
+<!--                <div class="layui-card-silk-pink">-->
+<!--                    <div class="layui-card-header silk-color-light-gray"><i class="fa fa-money icon "></i> 文件上传</div>-->
+<!--                    <div class="layui-card-body">-->
+<!--                        <div style="width: 100%;height:100px; text-align: center;">-->
+<!--                            <button style="margin-left: 110px" type="button" class="layui-btn" id="file"><i class="layui-icon"></i>上传</button>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+            <div class="layui-col-md6">
+                <div class="layui-card-silk-blue"  style="min-height: 260px">
+                    <div class="layui-card-header silk-color-light-gray"><i class="fa fa-upload icon "></i> 文件上传</div>
+                    <span class="layui-badge pull-right layui-bg-silk-deep-blue">Excel</span>
+                    <div class="layui-card-body">
+                        <button style="margin-top: 70px;margin-left: 300px" type="button" class="layui-btn" id="file"><i class="layui-icon"></i>上传</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-md6">
+                <div class="layui-card-silk-yellow" style="min-height: 250px">
+                    <div class="layui-card-header silk-color-light-gray"><i class="fa fa-pencil icon "></i> 楼栋安排</div>
+                    <div class="layui-card-body">
+                        <div class="layui-form layuimini-form" style="width: 80%; margin-top: 25px">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">男生宿舍楼</label>
+                                <div class="layui-input-block">
+                                    <select name="maleBuilding" id="maleBuilding" lay-verify="required">
+                                        <!--                                    <option value="0">必贵园</option>-->
+                                        <!--                                    <option value="1">丹桂园</option>-->
+                                        <!--                                    <option value="2">修身楼</option>-->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">女生宿舍楼</label>
+                                <div class="layui-input-block">
+                                    <select name="femaleBuilding" id="femaleBuilding" lay-verify="required">
+                                        <!--                                    <option value="0">开心楼</option>-->
+                                        <!--                                    <option value="1">夕可楼</option>-->
+                                        <!--                                    <option value="2">京城居</option>-->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item" style="text-align: center;margin-top: 30px;">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认分配</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    layui.use(['form', 'layer', 'echarts', 'table', 'upload', 'storage'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            upload = layui.upload,
+            storage = layui.storage,
+            axios = layui.axios,
+            echarts = layui.echarts;
+
+
+        form.render();
+
+
+        upload.render({
+            elem: '#file'
+            , headers: {
+                token: storage.getToken(),
+                // ContentType: "multipart/form-data",
+            }
+            , url: 'intention/upload' //改成您自己的上传接口
+            , method: 'post'
+            , accept: 'file' //普通文件
+            // ,auto:true
+            // ,data:{param}
+            , done: function (res) {
+                // layer.msg('');
+                layer.msg('上传成功！<br>  女生数量：' + res.data[0] + '人 <br>' + '男生数量：' + res.data[1] + '人');
+                // layer.msg()
+                console.log('女生数量：' + res.data[0] + '人');
+                console.log('男生数量：' + res.data[1] + '人');
+            }
+        });
+
+
+
+        // 查询女生宿舍楼
+        axios.post('building/query_female_building', {liverGender: 0}).then(function (response) {
+            console.log("女生楼栋数据：");
+            console.log(response.data);
+
+            let options = '<option value="">请选择</option>'
+            for (let obj of response.data){
+                options += '<option value="'+ obj.id + '">' + obj.id + '栋_' + obj.buildingName + '（空床位：' + obj.freeStuBed +'）</option>'
+            }
+            // console.log(options);
+            $('#femaleBuilding').append(options);
+            form.render('select');
+
+        }).catch(function (error) {
+            console.log(error);
+        });
+
+
+        // 查询男生宿舍楼
+        axios.post('building/query_male_building', {liverGender: 1}).then(function (response) {
+            console.log("男生楼栋数据：");
+            console.log(response.data);
+
+            let options = '<option value="">请选择</option>'
+            for (let obj of response.data){
+                options += '<option value="'+ obj.id + '">' + obj.id + '栋_' + obj.buildingName + '（空床位：' + obj.freeStuBed +'）</option>'
+            }
+            // console.log(options);
+            $('#maleBuilding').append(options);
+            form.render('select');
+        }).catch(function (error) {
+            console.log(error);
+        });
+
+
+        form.on('submit(saveBtn)', function (data) {
+            axios.post('intention/arrange', data.field).then(function (response) {
+                console.log(data.field);
+                console.log(data.field);
+                console.log(data.field);
+                if(response.code === 200){
+                    // layer.msg(response.msg);                        // layer的成功提示
+                    layer.msg('宿舍分配完成！<br>请在"用户管理"中查看详情')
+                }
+                // layer.close(parentIndex);                           // 关闭弹出层
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+            return false;
+        });
+
+
+    });
+</script>

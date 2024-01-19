@@ -1,0 +1,102 @@
+
+
+<div class="layuimini-main">
+    <div class="layui-form layuimini-form" style="width: 80%;margin-top: 20px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label required">ID</label>
+            <div class="layui-input-block">
+                <input type="text" name="id" lay-verify="required" lay-reqtext="学号/工号不能为空" placeholder="学号/工号" value="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="userName" lay-verify="required" lay-reqtext="姓名不能为空" placeholder="姓名" value="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="userPwd" lay-verify="required" lay-reqtext="密码不能为空" placeholder="密码" value="123456" class="layui-input">
+                <tip>默认：123456</tip>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">性别</label>
+            <div class="layui-input-block">
+                <input type="radio" name="gender" value=0 title="女‍🙋🏻‍♀️" checked="">
+                <input type="radio" name="gender" value=1 title="男🙋🏻‍♂️">
+<!--                <input type="radio" name="gender" value=2 title="保密🤐">-->
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">邮箱</label>
+            <div class="layui-input-block">
+                <input type="email" name="email" placeholder="example@email.com" value="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">房间</label>
+            <div class="layui-input-block">
+                <input type="text" name="roomId" placeholder="房间" value="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">角色</label>
+            <div class="layui-input-block">
+                <select name="userType" lay-verify="required">
+                    <option value="0">学生👨🏻‍🎓</option>
+                    <option value="1">宿管员👵🏻</option>
+<!--                    <option value="2">后勤中心🏫</option>-->
+                </select>
+<!--                <input type="radio" name="userType" value=0 title="学生👨🏻‍🎓" checked="">-->
+<!--                <input type="radio" name="userType" value=1 title="宿管👵🏻">-->
+<!--                <input type="radio" name="userType" value=2 title="后勤🏫">-->
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="text-align: center;margin-top: 30px;">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    layui.use(['form', 'table', 'axios', 'miniAdmin'], function () {
+        let form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            axios = layui.axios,
+            miniAdmin = layui.miniAdmin,
+            $ = layui.$;
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        let parentIndex = layer.index;
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            axios.post('user/create', data.field).then(function (response) {
+                if(response.code === 200){
+                    layer.msg(response.msg);                        // layer的成功提示
+                    // miniAdmin.success(response.msg);             // miniAdmin的成功提示
+                    // layui.table.reload('currentTableId');        // 刷新页面
+                    window.reload();                                // 同上
+                }
+                layer.close(parentIndex);                           // 关闭弹出层
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+            return false;
+        });
+
+    });
+</script>

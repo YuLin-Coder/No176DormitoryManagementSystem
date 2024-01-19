@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.NotificationMapper">
+
+	<resultMap type="com.silk.entity.Notification" id="Notification">
+		<id column="id" property="id"/>
+		<result column="user_id"  property="userId"/>
+		<result column="noti_head"  property="notiHead"/>
+		<result column="noti_content"  property="notiContent"/>
+		<result column="noti_range"  property="notiRange"/>
+		<result column="noti_type"  property="notiType"/>
+		<result column="noti_date"  property="notiDate"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.Notification">
+		insert into tb_notification(
+			user_id,
+			noti_head,
+			noti_content,
+			noti_range,
+			noti_type,
+			noti_date
+		)values(
+			#{userId},
+			#{notiHead},
+			#{notiContent},
+			#{notiRange},
+			#{notiType},
+			#{notiDate}
+		)
+	</insert>
+
+	<select id="query" resultMap="Notification">
+		select * from tb_notification
+		<include refid="NotificationFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_notification
+		<include refid="NotificationFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Notification">
+		select * from tb_notification where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_notification where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_notification set
+			user_id=#{userId},
+			noti_head=#{notiHead},
+			noti_content=#{notiContent},
+			noti_range=#{notiRange},
+			noti_type=#{notiType},
+			noti_date=#{notiDate}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_notification set
+			<if test="userId != null">user_id = #{userId}</if>,
+			<if test="notiHead != null and notiHead != ''"> noti_head = #{notiHead}</if>,
+			<if test="notiContent != null and notiContent != ''"> noti_content = #{notiContent}</if>,
+			<if test="notiRange != null">noti_range = #{notiRange}</if>,
+			<if test="notiType != null">noti_type = #{notiType}</if>,
+			<if test="notiDate != null and notiDate != ''"> noti_date = #{notiDate}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="NotificationFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="userId != null">and user_id = #{userId}</if>
+			<if test="notiHead != null and notiHead != ''">and noti_head = #{notiHead}</if>
+			<if test="notiContent != null and notiContent != ''">and noti_content = #{notiContent}</if>
+			<if test="notiRange != null">and noti_range = #{notiRange}</if>
+			<if test="notiType != null">and noti_type = #{notiType}</if>
+		</where>
+	</sql>
+
+
+	<select id="queryMyBuilding" resultMap="Notification">
+		select * from tb_notification where noti_range = #{buildingId} order by noti_date desc
+	</select>
+
+	<!-- 难点：查询学生所在房间的所有通知 -->
+	<select id="queryMyRoom" resultMap="Notification">
+		select * from tb_notification where noti_range = 0 and
+		    (select room_id from tb_user where tb_user.id = tb_notification.user_id) = (select room_id from tb_user where tb_user.id = #{userId})
+		order by noti_date desc
+	</select>
+
+</mapper>

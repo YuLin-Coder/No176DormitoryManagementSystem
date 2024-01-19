@@ -1,0 +1,411 @@
+<div class="layuimini-container layuimini-page-anim">
+
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-md9">
+            <!-- 1. 楼栋 -->
+            <div class="layuimini-main">
+                <div style="height:270px; margin: 30px" id="silk-building" >
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-md3">
+            <div class="layuimini-main">
+                <div id="buildingStatusEcharts" style="height:330px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-md3">
+            <!-- 2. 楼层 -->
+            <div class="layuimini-main">
+                <ul class="silk-floor">
+                </ul>
+            </div>
+        </div>
+        <div class="layui-col-md9">
+            <!-- 3. 房间 -->
+            <div class="layuimini-main" style="min-height: 500px">
+                <ul class="silk-room">
+                    <li>
+                        <p style="border-radius: 15px;">宿舍1</p>
+                        <!-- 4. 床 🛏 -->
+                        <ul class="silk-bed">
+                            <li style="border-radius: 15px;">yi</li>
+                            <li style="border-radius: 15px;">er</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    layui.use(['form', 'table','miniPage','miniAdmin','element', 'axios', 'echarts'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniAdmin = layui.miniAdmin,
+            axios = layui.axios,
+            echarts = layui.echarts,
+            miniPage = layui.miniPage;
+
+
+        var buildingIdForRoom;
+
+        /**
+         * @silkTag 1. 获取楼栋信息
+         */
+        function loadBuilding(){
+            axios.post('building/query', {}).then(function (response) {
+                console.log(response.data);
+                // 遍历后端返回数据，将楼栋信息装到每一个Button中
+                response.data.forEach(item=>{
+                    let dynamicContentButton =
+                        '<button class="layui-btn layui-btn-primary layui-btn-radius silk-building" key='+item.id+'>' +
+                        '<i class="layui-icon layui-icon-home"></i>' +
+                        item.id + '栋 <small>'+ item.buildingName +
+                        '</small></button>\n';                                  // 动态按钮内容（Key中为自定义属性）
+
+                    let dynamicContentButtonObj = $(dynamicContentButton);      // 转成对象
+
+                    // 点击按钮后能获取到选中的楼栋id
+                    dynamicContentButtonObj.click(function () {
+                        $(this).siblings().addClass('layui-btn-primary');       // 点击按钮后改变颜色
+                        $(this).removeClass('layui-btn-primary');               // 点击按钮后改变颜色
+                        loadFloor($(this).attr("key"));                         // 加载当前楼栋层数
+                        buildingIdForRoom = $(this).attr("key");
+                    });
+
+                    $('#silk-building').append(dynamicContentButtonObj);
+                })
+                $('#silk-building button:last').trigger('click');              // 页面加载后，默认选中最后一栋楼（最后一个按钮）
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+
+        loadBuilding();
+
+
+
+
+        var chartDom = document.getElementById('buildingStatusEcharts');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        option = {
+            tooltip: {
+                formatter: '{a} <br/>{b} : {c}%'
+            },
+            series: [{
+                name: '楼栋入住率',
+                type: 'gauge',
+                progress: {
+                    show: true
+                },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}'
+                },
+                data: []
+            }]
+        };
+
+        myChart.setOption(option);
+
+        // echarts 窗口缩放自适应
+        window.onresize = function () {
+            myChart.resize();
+        }
+
+
+        /**
+         * @silkTag 2. 加载楼层
+         */
+        function loadFloor(buildingId) {
+            // 获取该楼栋的入住率与学生性别
+            axios.get('building/occupancy_rate_and_gender?buildingId=' + buildingId).then(function (response) {
+                console.log(buildingId, '栋入住率：',response.data[0]);
+                let liverGender = response.data[1];
+                let echartsColor = '';
+                if (liverGender === 0){
+                    echartsColor = "#FFB6C1";
+                } else {
+                    echartsColor = "#87CEFA";
+                }
+
+                myChart.setOption({
+                    series:[{
+                        data: [
+                            {
+                                value: response.data[0],
+                                name: '入住率',
+                                itemStyle:{color: echartsColor}
+                            }
+                        ]
+                    }]
+                });
+            }).catch(function (error) {
+                layer.msg(error);
+            })
+
+
+
+            // 获取楼层数量
+            axios.get('building/query_floor_num?id=' + buildingId).then(function (response) {
+
+                // jQuery移除子节点(移除之前选中楼栋的楼层列表)
+                $('.silk-floor').empty();
+                for(let floor = 1; floor <= response.data.floorNum; floor++){
+                    // 动态按钮内容（Key中为自定义属性）
+                    let dynamicContentButton = `
+                        <li style="border-radius: 15px;" key='${floor}'>
+                            ${floor}楼
+                            <span>
+                                <button class="layui-icon layui-icon-add-circle" title="添加房间"></button>
+                            </span>
+                        </li>
+                    `;
+
+                    // 转成对象
+                    let dynamicContentButtonObj = $(dynamicContentButton);
+
+                    // 点击按钮后能获取到选中的楼栋id
+                    dynamicContentButtonObj.click(function () {
+                        $(this).siblings().removeClass('silk-floor-bg');
+                        $(this).addClass('silk-floor-bg');
+                        loadRoom($(this).attr("key"), buildingIdForRoom);                          // 加载房间信息
+                    });
+
+                    // 点击添加按钮后执行添加房间的功能
+                    dynamicContentButtonObj.find('button').click(function (event) {
+                        // 阻止冒泡(点击添加按钮不会触发刷新一层楼的功能)
+                        event.stopPropagation();
+
+                        // 添加事件
+                        let content = miniPage.getHrefContent('room/addRoom.html');
+                        let index = layer.open({
+                            title: '添加房间',
+                            type: 1,
+                            shade: 0.3,
+                            maxmin:true,                    // 显示最大最小化的按钮
+                            shadeClose: true,
+                            area: ['600px', '600px'],       // 原始值 area: [openWH[0] + 'px', openWH[1] + 'px'],
+                            offset: 'auto',                 // 原始值 offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                            content: content,
+
+                            end: function () {
+                                dynamicContentButtonObj.trigger('click');     // 添加结束后触发button，使得房间列表重新加载
+                            }
+                        });
+
+                        // 为表单赋值
+                        form.val('addRoomForm',{
+                            buildingId: buildingId,
+                            floor: dynamicContentButtonObj.attr("key"),
+                        })
+
+                        $(window).on("resize", function () {
+                            layer.full(index);
+                        });
+                    });
+                    $('.silk-floor').append(dynamicContentButtonObj);
+                }
+                $('.silk-floor li:first').trigger('click');                     // 页面加载后，默认选中第一层楼
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+
+
+        /**
+         * @silkTag 3. 加载房间列表
+         */
+        function loadRoom(floorId, buildingIdForRoom) {
+            axios.post('room/query',{"floor": floorId, "buildingId": buildingIdForRoom}).then(function (response) {
+                $('.silk-room').empty();
+
+                response.data.forEach(item=>{
+                    console.log(item.brand);
+
+                    let type
+                    if (item.roomType === 0){
+                        type = ' ';
+                    } else if(item.roomType === 1){
+                        type = '&nbsp&nbsp<a><span class="layui-badge layui-bg-silk-yellowgreen">宿管</span></a>';
+                    } else if(item.roomType === 2){
+                        type = '&nbsp&nbsp<a><span class="layui-badge layui-bg-silk-gold">后勤中心</span></a>';
+                    } else if(item.roomType === 3){
+                        type = '&nbsp&nbsp<a><span class="layui-badge layui-bg-silk-skyblue">招待所</span></a>';
+                    } else if(item.roomType === 4){
+                        type = '&nbsp&nbsp<a><span class="layui-badge layui-bg-silk-coral">小卖部</span></a>';
+                    } else if(item.roomType === 5){
+                        type = '&nbsp&nbsp<a><span class="layui-badge layui-bg-silk-super-light-gray">杂物间</span></a>';
+                    }
+
+                    let capacity
+                    if (item.roomCapacity === 0){
+                        capacity = '&nbsp&nbsp<a><span class="layui-badge layui-bg-silk-super-light-gray">不住人</span></a> ';
+                    }else {
+                        capacity = '';
+                    }
+
+
+                    let html = `
+                        <li>
+                            <p key='${item.id}'>
+                                ${item.brand}${type}${capacity}
+                                <span>
+                                    <button class="layui-icon layui-icon-add-circle silk-bed-add" title="添加床位"></button>
+                                    <button class="layui-icon layui-icon-delete silk-room-delete" title="删除房间"></button>
+                                </span>
+                            </p>
+                            <ul class="silk-bed">
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                            </ul>
+                        </li>
+                    `;                                  // 动态按钮内容（Key中为自定义属性）
+
+                    let htmlObj = $(html);      // 转成对象
+
+                    // 点击房间后进行折叠与展示
+                    htmlObj.find('p').click(function () {
+                        $(this).siblings().toggle(300);
+                        loadBed($(this).attr("key"), $(this).siblings());
+                    });
+
+                    // 点击后添加床位
+                    htmlObj.find('.silk-bed-add').click(function (event) {
+                        event.stopPropagation();
+                        let roomId =  htmlObj.find('p').attr("key");        // 获取room的ID
+                        axios.get('room/capacity_plus_one?id='+ roomId).then(function (response) {
+                            layer.msg(response.msg);
+                            loadBed(htmlObj.find('p').attr("key"), htmlObj.find('p').siblings());   // 重新加载房间中的床
+                        }).catch(function (error) {
+                            layer.msg(error);
+                        });
+                    });
+
+                    // 点击后删除该房间
+                    htmlObj.find('.silk-room-delete').click(function (event) {
+                        event.stopPropagation();
+                        layer.confirm("确定要删除吗？", function (index) {
+                            let roomIds =  htmlObj.find('p').attr("key");        // 获取room的ID
+                            axios.get('room/delete?ids=' + roomIds).then(function (response) {
+                                layer.msg(response.msg);
+                                htmlObj.remove();               // 前端移除该对象
+                                layer.close(index);
+                            }).catch(function (error) {
+                                layer.msg(error);
+                            });
+                        })
+                    });
+                    $('.silk-room').append(htmlObj);
+                });
+                console.log(response.data);
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+
+
+        /**
+         * @silkTag 4. 加载床位
+         */
+        function loadBed(roomId, bedObj) {
+            console.log(roomId, bedObj);
+
+
+            var liverAmount;
+
+            axios.get('room/query_liver_amount?id=' + roomId).then(function (response) {
+                liverAmount = response.data;
+
+                axios.post('room/query',{"id": roomId}).then(function (response) {
+                    bedObj.empty();
+                    console.log(response.data[0].roomCapacity);
+
+                    for (let bedNo = 1; bedNo <= response.data[0].roomCapacity; bedNo++){
+                        let html;
+
+                        if (bedNo <= liverAmount){
+                            html=`
+                        <li>
+
+                            <img class="silk-bed-image" src="../images/bed_active.png"/>
+                            <p style="margin-top: 15px;">床位${bedNo}</p>
+                            <!--<p style="margin-top: 20px;">
+                                <i class="layui-icon layui-icon-edit" title="编辑床位"></i>
+                            </p>-->
+                        </li>
+                    `;
+
+                            let htmlObj = $(html);
+
+                            // 点击删除床位
+                            htmlObj.find('.silk-bed-delete').click(function (event) {
+                                event.stopPropagation();
+
+                                layer.confirm("确定要删除吗？", function (index) {
+                                    axios.get('room/capacity_minus_one?id='+ roomId).then(function (response) {
+                                        htmlObj.remove();
+                                        layer.msg(response.msg);
+                                        layer.close(index);
+                                        loadBed(roomId, bedObj);   // 重新加载房间中的床
+                                    }).catch(function (error) {
+                                        layer.msg(error);
+                                    });
+                                })
+
+                            });
+                            bedObj.append(htmlObj);
+                        } else {
+                            html=`
+                        <li>
+
+                            <img class="silk-bed-image" src="../images/bed.png"/>
+                            <p style="margin-top: 15px;">床位${bedNo}</p>
+                            <p style="margin-top: 0px;">
+                                <i class="layui-icon layui-icon-delete silk-bed-delete" title="删除床位"></i>
+                                <!--<i class="layui-icon layui-icon-edit" title="编辑床位"></i>-->
+                            </p>
+                        </li>
+                    `;
+
+                            let htmlObj = $(html);
+
+                            // 点击删除床位
+                            htmlObj.find('.silk-bed-delete').click(function (event) {
+                                event.stopPropagation();
+
+                                layer.confirm("确定要删除吗？", function (index) {
+                                    axios.get('room/capacity_minus_one?id='+ roomId).then(function (response) {
+                                        htmlObj.remove();
+                                        layer.msg(response.msg);
+                                        layer.close(index);
+                                        loadBed(roomId, bedObj);   // 重新加载房间中的床
+                                    }).catch(function (error) {
+                                        layer.msg(error);
+                                    });
+                                })
+                            });
+                            bedObj.append(htmlObj);
+                        }
+                    }
+                }).catch(function (error) {
+                    layer.msg(error);
+                });
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+    });
+</script>

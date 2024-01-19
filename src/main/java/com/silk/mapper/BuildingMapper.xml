@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.BuildingMapper">
+
+	<resultMap type="com.silk.entity.Building" id="Building">
+		<id column="id" property="id"/>
+		<result column="building_name"  property="buildingName"/>
+		<result column="floor_num"  property="floorNum"/>
+		<result column="liver_gender"  property="liverGender"/>
+		<result column="manager_id"  property="managerId"/>
+		<result column="manager_name"  property="managerName"/>
+	</resultMap>
+
+	<insert id="create" parameterType="com.silk.entity.Building">
+		insert into tb_building(
+		    id,
+			building_name,
+			floor_num,
+			liver_gender,
+			manager_id,
+			manager_name
+		)values(
+		    #{id},
+			#{buildingName},
+			#{floorNum},
+			#{liverGender},
+			#{managerId},
+			#{managerName}
+		)
+	</insert>
+
+	<select id="query" resultMap="Building">
+		select * from tb_building
+		<include refid="BuildingFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_building
+		<include refid="BuildingFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Building">
+		select * from tb_building where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_building where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_building set
+			building_name=#{buildingName},
+			floor_num=#{floorNum},
+			liver_gender=#{liverGender},
+			manager_id=#{managerId},
+			manager_name=#{managerName}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_building
+		<set>
+			<if test="buildingName != null and buildingName != ''"> building_name = #{buildingName},</if>
+			<if test="floorNum != null">floor_num = #{floorNum},</if>
+			<if test="liverGender != null">liver_gender = #{liverGender},</if>
+			<if test="managerId != null">manager_id = #{managerId},</if>
+			<if test="managerName != null and managerName != ''"> manager_name = #{managerName},</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<sql id="BuildingFindCriteria">
+		<where>
+			<if test="id != null">and id like concat('%', #{id},'%')</if>
+			<if test="buildingName != null and buildingName != ''">and building_name like concat('%', #{buildingName},'%')</if>
+			<if test="floorNum != null">and floor_num = #{floorNum}</if>
+			<if test="liverGender != null">and liver_gender = #{liverGender}</if>
+			<if test="managerId != null">and manager_id = #{managerId}</if>
+			<if test="managerName != null and managerName != ''">and manager_name = #{managerName}</if>
+		</where>
+	</sql>
+
+
+	<select id="queryGender" resultType="int">
+		select liver_gender from tb_building where id = #{buildingId}
+	</select>
+
+	<select id="queryDomersBuilding" resultType="int">
+		select id from tb_building where manager_id = #{userId}
+	</select>
+
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.IntentionFileMapper">
+
+	<resultMap type="com.silk.entity.IntentionFile" id="IntentionFile">
+		<id column="id" property="id"/>
+		<result column="file_name"  property="fileName"/>
+		<result column="upload_time"  property="uploadTime"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.IntentionFile">
+		insert into tb_intention_file(
+			file_name,
+			upload_time
+		)values(
+			#{fileName},
+			#{uploadTime}
+		)
+	</insert>
+
+	<select id="query" resultMap="IntentionFile">
+		select * from tb_intention_file
+		<include refid="IntentionFileFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_intention_file
+		<include refid="IntentionFileFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="IntentionFile">
+		select * from tb_intention_file where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_intention_file where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_intention_file set
+			file_name=#{fileName},
+			upload_time=#{uploadTime}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_intention_file set
+			<if test="fileName != null and fileName != ''"> file_name = #{fileName}</if>,
+			<if test="uploadTime != null and uploadTime != ''"> upload_time = #{uploadTime}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="IntentionFileFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="fileName != null and fileName != ''">and file_name = #{fileName}</if>
+		</where>
+	</sql>
+
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.silk.mapper.MenuMapper">
+
+    <resultMap id="Menu" type="com.silk.entity.Menu">
+        <id column="id" property="id"></id>
+        <result column="title" property="title"></result>
+        <result column="icon" property="icon"></result>
+        <result column="href" property="href"></result>
+        <result column="target" property="target"></result>
+        <result column="parent_id" property="parentId"></result>
+        <result column="user_type" property="userType"></result>
+    </resultMap>
+
+    <!-- 小小子查询~ -->
+    <select id="query" resultMap="Menu">
+        select tb_menu.* from tb_menu, tb_user_menu where tb_menu.id = tb_user_menu.menu_id
+        and tb_user_menu.user_type = (select user_type from tb_user where tb_user.id = #{userId})
+    </select>
+
+</mapper>

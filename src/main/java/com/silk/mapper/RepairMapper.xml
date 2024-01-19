@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.RepairMapper">
+
+	<resultMap type="com.silk.entity.Repair" id="Repair">
+		<id column="id" property="id"/>
+		<result column="rep_item"  property="repItem"/>
+		<result column="description"  property="description"/>
+		<result column="rep_date"  property="repDate"/>
+		<result column="stu_id" property="stuId"/>
+		<result column="building_id"  property="buildingId"/>
+		<result column="room_id"  property="roomId"/>
+		<result column="rep_status"  property="repStatus"/>
+		<result column="rep_man"  property="repMan"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.Repair">
+		insert into tb_repair(
+			rep_item,
+			description,
+			rep_date,
+			stu_id,
+			building_id,
+			room_id,
+			rep_status,
+			rep_man
+		)values(
+			#{repItem},
+			#{description},
+			#{repDate},
+		    #{stuId},
+			#{buildingId},
+			#{roomId},
+			#{repStatus},
+			#{repMan}
+		)
+	</insert>
+
+	<select id="query" resultMap="Repair">
+		select * from tb_repair
+		<include refid="RepairFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_repair
+		<include refid="RepairFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Repair">
+		select * from tb_repair where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_repair where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_repair set
+			rep_item=#{repItem},
+			description=#{description},
+			rep_date=#{repDate},
+		    stu_id=#{stuId},
+			building_id=#{buildingId},
+			room_id=#{roomId},
+			rep_status=#{repStatus},
+			rep_man=#{repMan}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_repair
+		<set>
+			<if test="repItem != null and repItem != ''"> rep_item = #{repItem},</if>
+			<if test="description != null and description != ''"> description = #{description},</if>
+			<if test="repDate != null and repDate != ''"> rep_date = #{repDate},</if>
+			<if test="stuId != null">stu_id = #{stuId},</if>
+			<if test="buildingId != null">building_id = #{buildingId},</if>
+			<if test="roomId != null">room_id = #{roomId},</if>,
+			<if test="repStatus != null">rep_status = #{repStatus},</if>
+			<if test="repMan != null and repMan != ''"> rep_man = #{repMan},</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<sql id="RepairFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="repItem != null and repItem != ''">and rep_item = #{repItem}</if>
+			<if test="description != null and description != ''">and description = #{description}</if>
+			<if test="stuId != null">and stu_id = #{stuId}</if>
+			<if test="buildingId != null">and building_id = #{buildingId}</if>
+			<if test="roomId != null">and room_id = #{roomId}</if>
+			<if test="repStatus != null">and rep_status = #{repStatus}</if>
+			<if test="repMan != null and repMan != ''">and rep_man = #{repMan}</if>
+		</where>
+	</sql>
+
+</mapper>

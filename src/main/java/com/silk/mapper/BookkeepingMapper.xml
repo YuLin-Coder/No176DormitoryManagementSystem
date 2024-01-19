@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.BookkeepingMapper">
+
+	<resultMap type="com.silk.entity.Bookkeeping" id="Bookkeeping">
+		<id column="id" property="id"/>
+		<result column="room_id"  property="roomId"/>
+		<result column="balance"  property="balance"/>
+		<result column="user_id"  property="userId"/>
+		<result column="bk_money"  property="bkMoney"/>
+		<result column="bk_type"  property="bkType"/>
+		<result column="classification" property="classification"/>
+		<result column="remark"  property="remark"/>
+		<result column="bk_time"  property="bkTime"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.Bookkeeping">
+		insert into tb_bookkeeping(
+			room_id,
+			balance,
+			user_id,
+			bk_money,
+			bk_type,
+			classification,
+			remark,
+			bk_time
+		)values(
+			#{roomId},
+			#{balance},
+			#{userId},
+			#{bkMoney},
+			#{bkType},
+		    #{classification},
+			#{remark},
+			#{bkTime}
+		)
+	</insert>
+
+	<select id="query" resultMap="Bookkeeping">
+		select * from tb_bookkeeping
+		<include refid="BookkeepingFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_bookkeeping
+		<include refid="BookkeepingFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Bookkeeping">
+		select * from tb_bookkeeping where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_bookkeeping where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_bookkeeping set
+			room_id=#{roomId},
+			balance=#{balance},
+			user_id=#{userId},
+			bk_money=#{bkMoney},
+			bk_type=#{bkType},
+			classification=#{classification},
+			remark=#{remark},
+			bk_time=#{bkTime}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_bookkeeping set
+			<if test="roomId != null">room_id = #{roomId}</if>,
+			<if test="balance != null">balance = #{balance}</if>,
+			<if test="userId != null">user_id = #{userId}</if>,
+			<if test="bkMoney != null">bk_money = #{bkMoney}</if>,
+			<if test="bkType != null">bk_type = #{bkType}</if>,
+			<if test="classification != null">classification = #{classification}</if>,
+			<if test="remark != null and remark != ''"> remark = #{remark}</if>,
+			<if test="bkTime != null and bkTime != ''"> bk_time = #{bkTime}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="BookkeepingFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="roomId != null">and room_id = #{roomId}</if>
+			<if test="balance != null">and balance = #{balance}</if>
+			<if test="userId != null">and user_id = #{userId}</if>
+			<if test="bkMoney != null">and bk_money = #{bkMoney}</if>
+			<if test="classification != null">and classification = #{classification}</if>
+			<if test="bkType != null">and bk_type = #{bkType}</if>
+			<if test="remark != null and remark != ''">and remark like concat('%', #{remark},'%')</if>
+		</where>
+	</sql>
+
+
+	<!-- 难点：查询学生所在房间当月的所有支出 -->
+	<select id="queryMyRoomExpenditure" resultMap="Bookkeeping">
+		select * from tb_bookkeeping where bk_type = 0 and bk_time between '2021-06-01' and '2021-07-01' and
+					(select room_id from tb_user where tb_user.id = tb_bookkeeping.user_id) =
+					(select room_id from tb_user where tb_user.id = #{userId})
+		order by classification
+	</select>
+
+	<select id="queryMyRoom" resultMap="Bookkeeping">
+		select * from tb_bookkeeping
+		<include refid="BookkeepingFindCriteria"/>
+		order by bk_time desc
+	</select>
+
+	<!-- 超难点：查询学生所在房间的所有不同类型支出的数量 -->
+	<select id="queryMyRoomEachClassificationAmount" resultType="int">
+		select count(*) from tb_bookkeeping where bk_type = 0 and
+					(select room_id from tb_user where tb_user.id = tb_bookkeeping.user_id) =
+					(select room_id from tb_user where tb_user.id = #{userId})
+		group by classification order by classification;
+	</select>
+
+	<!-- 获取当前寝室最新账单日期 -->
+	<select id="queryMaxDate" resultType="date">
+		select max(bk_time) from tb_bookkeeping where room_id = #{roomId}
+	</select>
+
+	<!-- 获取当前月份的某类账单总量。例如：3月份该寝室的餐饮花费为102.5元
+	 难点：处理小于号.小于号：&lt;   大于号：&gt;
+	 -->
+	<select id="queryMonthlyExpenditureByClassification" resultType="double">
+		select sum(bk_money) from tb_bookkeeping
+		where bk_type = 0
+		and room_id = #{roomId}
+		and
+			(bk_time &lt; concat(#{year}, '-', #{month}+1, '-01') and bk_time &gt; concat(#{year}, '-', #{month}, '-01'))
+		and classification = #{classification}
+	</select>
+
+</mapper>

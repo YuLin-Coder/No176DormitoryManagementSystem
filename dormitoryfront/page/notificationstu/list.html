@@ -1,0 +1,250 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main welcome">
+
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-card-silk-blue-for-notification">
+                    <div class="layui-card-header silk-color-light-gray">
+                        <i class="fa fa-building-o icon "></i> 楼栋通知
+                    </div>
+                    <div class="layui-card-body">
+                        <div style="width: 100%;min-height:630px">
+                            <div class="layui-row" id="building-notification">
+
+                                <!--<div class="layui-col-md6">
+                                    <div class="silk-card-notification">
+                                        <div class="layui-card-header silk-color-deep-gray-for-notification-head">
+                                            通知标题
+                                        </div>
+                                        <span class="layui-badge pull-right layui-bg-silk-pink">2021年3月29日</span>
+                                        <div class="layui-card-body silk-color-light-gray">
+                                            通知内容
+                                        </div>
+                                    </div>
+                                </div>-->
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-md6">
+                <div class="layui-card-silk-yellow-for-notification">
+                    <div class="layui-card-header silk-color-light-gray">
+                        <i class="fa fa-home icon"></i> 房间通知
+                        <button class="layui-btn layui-btn-silk-light-yellow data-add-btn layui-btn-radius" lay-event="add" style="float: right;" id="addRoomNotification">
+                            <i class="layui-icon layui-icon-add-circle layui-btn-silk-yellow-add-circle"></i>
+                        </button>
+                    </div>
+                    <div class="layui-card-body">
+                        <div id="part2" style="width: 100%;min-height:630px">
+                            <div class="layui-row" id="room-notification">
+
+                                <!--<div class="layui-col-md6">
+                                    <div class="silk-card-notification">
+                                        <div class="layui-card-header silk-color-deep-gray-for-notification-head">
+                                            通知标题
+                                        </div>
+                                        <span class="layui-badge pull-right layui-bg-silk-pink">Linda</span>
+                                        <span class="layui-badge pull-right layui-bg-silk-pink">2021年3月29日</span>
+                                        <div class="layui-card-body silk-color-light-gray">
+                                            通知内容
+                                        </div>
+                                    </div>
+                                </div>-->
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    layui.use(['form', 'table','miniPage','miniAdmin','element', 'axios', 'echarts'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniAdmin = layui.miniAdmin,
+            axios = layui.axios,
+            echarts = layui.echarts,
+            miniPage = layui.miniPage;
+
+
+        // 1. 加载楼栋通知
+        function loadBuildingNotification() {
+            axios.post('notification/query_my_building').then(function (response) {
+                console.log("楼栋通知数据：");
+                console.log(response.data);
+                response.data.forEach(item=>{
+                    let type;
+                    let deleteBtn;
+
+                    if (item.isMyNotification === 1){
+                        deleteBtn = `
+                            <button class="layui-btn layui-btn-silk-light-yellow data-add-btn layui-btn-radius" lay-event="add" style="float: right;" id="addRoomNotification">
+                                <i class="layui-icon layui-icon-add-circle layui-btn-silk-yellow-add-circle"></i>
+                            </button>
+                        `;
+                    }else{
+                        deleteBtn = '';
+                    }
+
+
+                    if (item.notiType === 0){
+                        type = `
+                                <div class="layui-card-header silk-color-deep-gray-for-notification-head">
+                                    ${item.notiHead}
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${item.notiDate}</span>
+                                <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                                    ${item.notiContent}
+                                </div>
+                        `;
+                    } else if (item.notiType === 1){
+                        type = `
+                                <div class="layui-card-header silk-color-red-for-notification-head">
+                                    ${item.notiHead}
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${item.notiDate}</span>
+                                <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                                    ${item.notiContent}
+                                </div>
+                        `;
+                    } else if (item.notiType === 2){
+                        type = `
+                                <div class="layui-card-header silk-color-light-gray-for-notification-head">
+                                    ${item.notiHead}
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${item.notiDate}</span>
+                                <div class="layui-card-body silk-color-light-gray-for-passed-notification-body" style="margin: 10px 10px 0px 10px;">
+                                    ${item.notiContent}
+                                </div>
+                        `;
+                    }
+
+
+                    let dynamicNotification = `
+                        <div class="layui-col-md6">
+                            <div class="silk-card-notification">
+                                ${type}
+                            </div>
+                        </div>
+                    `;
+
+                    $('#building-notification').append(dynamicNotification);
+                });
+
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+
+        loadBuildingNotification();
+
+
+
+
+        // 2. 加载房间通知
+        function loadRoomNotification() {
+            axios.post('notification/query_my_room').then(function (response) {
+                console.log(response.data);
+
+                // console.log(response.data[0].user.userName);
+
+                response.data.forEach(item=>{
+                    let type;
+
+                    // 通知类型：0 = 一般通知；1 = 重要通知
+                    if (item.notiType === 0){
+                        type = `
+                                <div class="layui-card-header silk-color-deep-gray-for-notification-head">
+                                    ${item.notiHead}
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-pink">${item.user.userName}</span>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${item.notiDate}</span>
+                                <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                                    ${item.notiContent}
+                                </div>
+                        `;
+                    } else if (item.notiType === 1) {
+                        type = `
+                                <div class="layui-card-header silk-color-red-for-notification-head">
+                                    ${item.notiHead}
+                                </div>
+                                <span class="layui-badge pull-right layui-bg-silk-pink">${item.user.userName}</span>
+                                <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${item.notiDate}</span>
+                                <div class="layui-card-body silk-color-light-gray" style="margin: 10px 10px 0px 10px;">
+                                    ${item.notiContent}
+                                </div>
+                        `;
+                    }
+                    // else if (item.notiType === 2){
+                    //     type = `
+                    //             <div class="layui-card-header silk-color-light-gray-for-notification-head">
+                    //                 ${item.notiHead}
+                    //             </div>
+                    //             <span class="layui-badge pull-right layui-bg-silk-pink">${item.user.userName}</span>
+                    //             <span class="layui-badge pull-right layui-bg-silk-light-gray-reversed">${item.notiDate}</span>
+                    //             <div class="layui-card-body silk-color-light-gray-for-passed-notification-body" style="margin: 10px 10px 0px 10px;">
+                    //                 ${item.notiContent}
+                    //             </div>
+                    //     `;
+                    // }
+
+
+                    let dynamicNotification = `
+                        <div class="layui-col-md6">
+                            <div class="silk-card-notification">
+                                ${type}
+                            </div>
+                        </div>
+                    `;
+
+                    $('#room-notification').append(dynamicNotification);
+                });
+
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+        }
+
+        loadRoomNotification();
+
+
+
+        $('#addRoomNotification').click(function () {
+            // 添加事件
+            let content = miniPage.getHrefContent('notificationstu/add.html');
+            let index = layer.open({
+                title: '添加通知',
+                type: 1,
+                shade: 0.3,
+                maxmin:true,                    // 显示最大最小化的按钮
+                shadeClose: true,
+                area: ['600px', '600px'],       // 原始值 area: [openWH[0] + 'px', openWH[1] + 'px'],
+                offset: 'auto',                 // 原始值 offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                content: content,
+
+                end: function () {
+
+                    // todo 修改为局部刷新房间通知
+                    window.parent.location.reload();// 添加结束后触发button，使得房间列表重新加载
+                }
+
+                // end: function () {
+                //     $('#room-notification').reload();
+                // }
+            });
+
+            $(window).on("resize", function () {
+                layer.full(index);
+            });
+        });
+    });
+
+</script>

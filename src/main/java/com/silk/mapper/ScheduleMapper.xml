@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.ScheduleMapper">
+
+	<resultMap type="com.silk.entity.Schedule" id="Schedule">
+		<id column="id" property="id"/>
+		<result column="user_id" property="userId"/>
+		<result column="sch_name"  property="schName"/>
+		<result column="sch_content"  property="schContent"/>
+		<result column="sch_time"  property="schTime"/>
+		<result column="sch_location"  property="schLocation"/>
+		<result column="sch_priority"  property="schPriority"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.Schedule">
+		insert into tb_schedule(
+		    user_id,
+			sch_name,
+			sch_content,
+			sch_time,
+			sch_location,
+			sch_priority
+		)values(
+		    #{userId},
+			#{schName},
+			#{schContent},
+			#{schTime},
+			#{schLocation},
+			#{schPriority}
+		)
+	</insert>
+
+	<select id="query" resultMap="Schedule">
+		select * from tb_schedule
+		<include refid="ScheduleFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_schedule
+		<include refid="ScheduleFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Schedule">
+		select * from tb_schedule where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_schedule where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_schedule set
+		    user_id = #{userId},
+			sch_name = #{schName},
+			sch_content = #{schContent},
+			sch_time = #{schTime},
+			sch_location = #{schLocation},
+			sch_priority = #{schPriority}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_schedule set
+			<if test="userId != null and userId != ''"> user_id = #{userId}</if>,
+			<if test="schName != null and schName != ''"> sch_name = #{schName}</if>,
+			<if test="schContent != null and schContent != ''"> sch_content = #{schContent}</if>,
+			<if test="schTime != null and schTime != ''"> sch_time = #{schTime}</if>,
+			<if test="schLocation != null and schLocation != ''">sch_location = #{schLocation}</if>,
+			<if test="schPriority != null">sch_priority = #{schPriority}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="ScheduleFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="user_id != null">and user_id = #{userId}</if>
+			<if test="schName != null and schName != ''">and sch_name = #{schName}</if>
+			<if test="schContent != null and schContent != ''">and sch_content = #{schContent}</if>
+			<if test="schLocation != null and schLocation != ''">and sch_location = #{schLocation}</if>
+			<if test="schPriority != null">and sch_priority = #{schPriority}</if>
+		</where>
+	</sql>
+	
+	
+	
+	<select id="waitForCompletionAmount" resultType="int">
+		select count(*) from tb_schedule where sch_time >= #{todayTime} and user_id = #{userId}
+	</select>
+
+	<select id="alreadyFinishedAmount" resultType="int">
+		select count(*) from tb_schedule where sch_time &lt; #{todayTime} and user_id = #{userId}
+	</select>
+
+	<select id="querySchedule" resultMap="Schedule">
+		select * from tb_schedule
+			where sch_time > #{schTime}
+		    	and user_id = #{userId}
+		order by sch_time
+	</select>
+
+</mapper>

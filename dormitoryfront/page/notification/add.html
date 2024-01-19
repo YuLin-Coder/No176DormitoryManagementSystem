@@ -1,0 +1,66 @@
+<div class="layuimini-main">
+    <div class="layui-form layuimini-form" style="width: 80%;margin-top: 20px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label required">通知标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="notiHead" lay-verify="required" lay-reqtext="申请原因不能为空" placeholder="通知标题" value="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">通知内容</label>
+            <div class="layui-input-block">
+                <textarea name="notiContent" placeholder="通知内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">通知类型</label>
+            <div class="layui-input-block">
+                <select name="notiType" lay-verify="required">
+                    <option value="0">一般</option>
+                    <option value="1">重要</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item" style="text-align: center;margin-top: 30px;">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form', 'table', 'axios', 'miniAdmin'], function () {
+        let form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            axios = layui.axios,
+            miniAdmin = layui.miniAdmin,
+            $ = layui.$;
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        let parentIndex = layer.index;
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            axios.post('notification/dormer_create', data.field).then(function (response) {
+                if(response.code === 200){
+                    layer.msg(response.msg);                        // layer的成功提示
+                    window.reload();                                // 同上
+                }
+                layer.close(parentIndex);                           // 关闭弹出层
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+            return false;
+        });
+
+    });
+</script>

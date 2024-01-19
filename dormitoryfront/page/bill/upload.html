@@ -1,0 +1,377 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main welcome">
+        <div class="layui-row layui-col-space12">
+            <div class="layui-col-xs9">
+                <div class="layui-card-silk-mintCream">
+                    <div class="layui-card-header"><i class="fa fa-line-chart icon"></i> 水电消耗</div>
+                    <div class="layui-card-body">
+                        <div id="echarts-records" style="width: 100%;min-height:600px"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs3">
+                <div class="layui-card-silk-yellow">
+                    <div class="layui-card-header silk-color-light-gray"><i class="fa fa-heart-o icon "></i> 数据统计</div>
+                        <span class="layui-badge pull-right layui-bg-silk-deep-orange">本月</span>
+                    <div class="layui-card-body">
+                        <div class="welcome-module">
+                            <div class="layui-row layui-col-space10">
+                                <div class="layui-col-xs6">
+                                    <div class="panel layui-bg-number">
+                                        <div class="panel-body">
+                                            <div class="panel-title">
+                                                <h5 class="silk-color-middle-gray">用水量</h5>
+                                            </div>
+                                            <div class="panel-content">
+                                                <h2 class="no-margins" id="waterUsed"></h2>
+                                                <small class="silk-color-light-gray">吨（t）</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-xs6">
+                                    <div class="panel layui-bg-number">
+                                        <div class="panel-body">
+                                            <div class="panel-title">
+                                                <h5 class="silk-color-middle-gray">水费</h5>
+                                            </div>
+                                            <div class="panel-content">
+                                                <h2 class="no-margins silk-color-deep-orange" id="waterFee"></h2>
+                                                <small class="silk-color-light-gray">元（￥）</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-xs6">
+                                    <div class="panel layui-bg-number">
+                                        <div class="panel-body">
+                                            <div class="panel-title">
+<!--                                                <span class="layui-badge pull-right layui-bg-silk-yellowgreen">实时</span>-->
+                                                <h5 class="silk-color-middle-gray">用电量</h5>
+                                            </div>
+                                            <div class="panel-content">
+                                                <h2 class="no-margins" id="energyUsed"></h2>
+                                                <small class="silk-color-light-gray">千瓦时（kW*h）</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-xs6">
+                                    <div class="panel layui-bg-number">
+                                        <div class="panel-body">
+                                            <div class="panel-title">
+                                                <h5 class="silk-color-middle-gray">电费</h5>
+                                            </div>
+                                            <div class="panel-content">
+                                                <h2 class="no-margins silk-color-deep-orange" id="energyFee"></h2>
+                                                <small class="silk-color-light-gray">元（￥）</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-xs3">
+                <div class="layui-card-silk-blue">
+                    <div class="layui-card-header silk-color-light-gray"><i class="fa fa-upload icon "></i> 账单上传</div>
+                    <span class="layui-badge pull-right layui-bg-silk-deep-blue">Excel</span>
+                    <div class="layui-card-body">
+                        <button style="margin-left: 110px" type="button" class="layui-btn" id="file"><i class="layui-icon"></i>上传</button>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs3">
+                <div class="layui-card-for-billStatus">
+                    <div class="layui-card-header"><i class="fa fa-pie-chart icon"></i> 缴费情况</div>
+                    <span class="layui-badge pull-right layui-bg-silk-deep-purple">实时</span>
+                    <div class="layui-card-body">
+                        <div id="echarts-fee-records" style="width: 100%;min-height:200px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form layuimini-form layui-hide" style="width: 30%;margin-top: 20px;">
+            <div class="layui-form-item">
+                <label class="layui-form-label">缴费详情（未付款、已付款、正在付款）</label>
+                <div class="layui-input-block">
+                    <input type="text" readonly id="billPaidInfo" class="layui-input">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    layui.use(['form', 'layer', 'echarts', 'table', 'upload', 'storage'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            upload = layui.upload,
+            storage = layui.storage,
+            echarts = layui.echarts;
+
+
+        upload.render({
+            elem: '#file'
+            ,headers: {
+                token: storage.getToken(),
+                // ContentType: "multipart/form-data",
+            }
+            ,url: 'bill/upload' //改成您自己的上传接口
+            ,method: 'post'
+            ,accept: 'file' //普通文件
+            // ,auto:true
+            // ,data:{param}
+            ,done: function(res){
+                layer.msg('上传成功');
+                console.log(res);
+            }
+        });
+
+
+
+        /**
+         * 报表功能
+         */
+        var echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
+
+        var optionRecords = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            legend: {
+                data: ['水费', '电费', '用水量', '用电量', '水电总量']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: [{
+                type: 'category',
+                data: []
+            }],
+            yAxis: [
+                {
+                    type: 'value'
+                }
+            ],
+            series: []
+        };
+
+
+
+        echartsRecords.setOption(optionRecords);
+
+        // echarts 窗口缩放自适应
+        window.onresize = function () {
+            echartsRecords.resize();
+        }
+
+
+        // 水电费缴费情况扇形图
+        var echartsFeeRecords = echarts.init(document.getElementById('echarts-fee-records'), 'walden');
+        var optionFeeRecords = {
+            tooltip: {
+                trigger: 'item'
+            },
+            legend: {
+                textStyle:{
+                    color: 'rgb(135, 129, 122)',
+                },
+                top: '1%',
+                left: 'center'
+            },
+            grid: {
+                left: 30,
+                right: '10%',
+                height: '20%',
+                bottom: 10
+            },
+            series: [
+                {
+                    name: '缴费情况',
+                    type: 'pie',
+                    radius: ['45%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: 'rgb(233, 231, 251)',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: []
+                }
+            ]
+        };
+        echartsFeeRecords.setOption(optionFeeRecords);
+
+        // echarts 窗口缩放自适应
+        window.onresize = function () {
+            echartsFeeRecords.resize();
+        }
+
+
+
+        /**
+        * @silkTag 获取水电账单付款信息、水量/费、电量/费信息
+        * */
+        axios.get('bill/paid_info',{}).then(function (response) {
+            console.log(response.data)
+
+            $('#waterUsed').html(response.data.billUsedAndFeeInfo[0]);
+            $('#waterFee').html(response.data.billUsedAndFeeInfo[1]);
+            $('#energyUsed').html(response.data.billUsedAndFeeInfo[2]);
+            $('#energyFee').html(response.data.billUsedAndFeeInfo[3]);
+
+            // $('#billPaidInfo').val(response.data.billPaidInfo);
+            // $('#paying').val(response.data.gender===0?"女":"男");
+            // $('#roomCapacity').val(response.data.room.roomCapacity + '人间');
+
+            var billPaidInfo = response.data.billPaidInfo;
+            echartsFeeRecords.setOption({
+                series: [{
+                    data: [
+                        // {value: billPaidInfo[0], name: '未缴费', itemStyle:{color:'#de6e6a'}},
+                        // {value: billPaidInfo[1], name: '已缴费', itemStyle:{color:'#9fc97e'}},
+                        // {value: billPaidInfo[2], name: '正在支付', itemStyle:{color: '#f3c86b'}},
+
+                        // {value: billPaidInfo[0], name: '未缴费', itemStyle:{color: 'rgb(241, 153, 74)'}},
+                        // {value: billPaidInfo[1], name: '已缴费', itemStyle:{color: 'rgb(100, 192, 121)'}},
+                        // {value: billPaidInfo[2], name: '拖欠中', itemStyle:{color: 'rgb(218, 112, 214)'}},
+                        {value: billPaidInfo[0], name: '未缴费', itemStyle:{color: 'Plum'}},
+                        {value: billPaidInfo[1], name: '已缴费'},
+                        {value: billPaidInfo[2], name: '拖欠中'},
+                    ]
+                }]
+            });
+        }).catch(function (error){
+            console.log(error)
+        })
+
+
+
+        /**
+         * @silkTag 获取水电账单付款信息、水量/费、电量/费信息
+         * */
+        let seriesList = [
+            {
+                name: '用水量',
+                type: 'bar',
+                stack: 'used1',
+                emphasis: {
+                    focus: 'series'
+                },
+                data: []
+            },
+            {
+                name: '用电量',
+                type: 'bar',
+                stack: 'used2',
+                emphasis: {
+                    focus: 'series'
+                },
+                data: []
+            },
+            {
+                name: '水电费',
+                type: 'bar',
+                data: [],
+                emphasis: {
+                    focus: 'series'
+                },
+                markLine: {
+                    lineStyle: {
+                        type: 'dashed'
+                    },
+                    data: [
+                        [{type: 'min'}, {type: 'max'}]
+                    ]
+                }
+            },
+            {
+                name: '水费',
+                type: 'bar',
+                barWidth: 7,
+                stack: '水电费',
+                emphasis: {
+                    focus: 'series'
+                },
+                data: []
+            },
+            {
+                name: '电费',
+                type: 'bar',
+                stack: '水电费',
+                emphasis: {
+                    focus: 'series'
+                },
+                data: []
+            }
+        ]
+
+        let xAxisDataList = []
+        axios.get('bill/query_history_bill_info',{}).then(function (response) {
+            console.log('历史用水量')
+            console.log(response.data[0])
+            console.log('历史水费')
+            console.log(response.data[1])
+            console.log('历史用电量')
+            console.log(response.data[2])
+            console.log('历史电费')
+            console.log(response.data[3])
+            console.log('历史水电费')
+            console.log(response.data[4])
+            console.log('历史月份')
+            console.log(response.data[5])
+
+
+            console.log(response.data[1].length)
+
+            for(let i=5; i>=0; i--){
+                console.log(response.data[1][i])
+                seriesList[0].data.push(response.data[0][i])
+                seriesList[1].data.push(response.data[2][i])
+                seriesList[2].data.push(response.data[4][i])
+                seriesList[3].data.push(response.data[1][i])
+                seriesList[4].data.push(response.data[3][i])
+                xAxisDataList.push(response.data[5][i] + '月')
+            }
+            console.log('历史月份倒序')
+            console.log(xAxisDataList)
+            echartsRecords.setOption({
+                xAxis: [{
+                    data: xAxisDataList
+                }],
+                series: seriesList
+            });
+        }).catch(function (error){
+            console.log(error)
+        })
+
+    });
+</script>

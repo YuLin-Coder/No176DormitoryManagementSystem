@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.BillMapper">
+
+	<resultMap type="com.silk.entity.Bill" id="Bill">
+		<id column="id" property="id"/>
+		<result column="bill_year"  property="billYear"/>
+		<result column="bill_month"  property="billMonth"/>
+		<result column="building_id"  property="buildingId"/>
+		<result column="room_id"  property="roomId"/>
+		<result column="water_used"  property="waterUsed"/>
+		<result column="water_fee"  property="waterFee"/>
+		<result column="energy_used"  property="energyUsed"/>
+		<result column="energy_fee"  property="energyFee"/>
+		<result column="total_fee"  property="totalFee"/>
+		<result column="paid"  property="paid"/>
+	</resultMap>
+
+	<insert id="create" parameterType="com.silk.entity.Bill">
+		insert into tb_bill(
+			id,
+		    bill_year,
+		    bill_month,
+			building_id,
+			room_id,
+			water_used,
+			water_fee,
+			energy_used,
+			energy_fee,
+			total_fee,
+		    paid
+		)values(
+			#{id},
+		    #{billYear},
+		    #{billMonth},
+			#{buildingId},
+			#{roomId},
+			#{waterUsed},
+			#{waterFee},
+			#{energyUsed},
+			#{energyFee},
+			#{totalFee},
+		    #{paid}
+		)
+	</insert>
+
+	<select id="query" resultMap="Bill">
+		select * from tb_bill
+		<include refid="BillFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_bill
+		<include refid="BillFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Bill">
+		select * from tb_bill where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_bill where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_bill set
+			bill_year=#{billYear},
+		    bill_month=#{billMonth},
+			building_id=#{buildingId},
+			room_id=#{roomId},
+			water_used=#{waterUsed},
+			water_fee=#{waterFee},
+			energy_used=#{energyUsed},
+			energy_fee=#{energyFee},
+			total_fee=#{totalFee},
+			paid=#{paid},
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_bill set
+			<if test="billYear != null">bill_year = #{billYear}</if>,
+			<if test="billMonth != null">bill_month = #{billMonth}</if>,
+			<if test="buildingId != null">building_id = #{buildingId}</if>,
+			<if test="roomId != null">room_id = #{roomId}</if>,
+			<if test="waterUsed != null">water_used = #{waterUsed}</if>,
+			<if test="waterFee != null">water_fee = #{waterFee}</if>,
+			<if test="energyUsed != null">energy_used = #{energyUsed}</if>,
+			<if test="energyFee != null">energy_fee = #{energyFee}</if>,
+			<if test="totalFee != null">total_fee = #{totalFee}</if>,
+			<if test="paid != null">paid = #{paid}</if>,
+		where id = #{id}
+	</update>
+
+	<sql id="BillFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="billYear != null">and bill_year = #{billYear}</if>
+			<if test="billMonth != null">and bill_month = #{billMonth}</if>
+			<if test="buildingId != null">and building_id = #{buildingId}</if>
+			<if test="roomId != null">and room_id = #{roomId}</if>
+			<if test="waterUsed != null">and water_used = #{waterUsed}</if>
+			<if test="waterFee != null">and water_fee = #{waterFee}</if>
+			<if test="energyUsed != null">and energy_used = #{energyUsed}</if>
+			<if test="energyFee != null">and energy_fee = #{energyFee}</if>
+			<if test="totalFee != null">and total_fee = #{totalFee}</if>
+			<if test="paid != null">and paid = #{paid}</if>
+		</where>
+	</sql>
+
+
+
+	<!-- 1. 付款情况 -->
+	<!-- 本月水电账单尚未付款的房间数量 -->
+	<select id="notPaidAmount" resultType="int">
+		select count(paid) from tb_bill where paid=0 and building_id = #{buildingId}
+	</select>
+	<!-- 本月水电账单已经付款的房间数量 -->
+	<select id="havePaidAmount" resultType="int">
+		select count(paid) from tb_bill where paid=1 and building_id = #{buildingId}
+	</select>
+	<!-- 更早水电账单仍有拖欠的房间数量 -->
+	<select id="delayPaidAmount" resultType="int">
+		select count(paid) from tb_bill where paid=2 and building_id = #{buildingId}
+	</select>
+
+
+	<!-- 2. 水电量、水电费 -->
+	<!-- 本月整栋楼用水量 -->
+	<select id="totalWaterUsed" resultType="double">
+		select sum(water_used) from tb_bill
+			where building_id = #{buildingId}
+			  and bill_month =
+				  (select max(bill_month) from tb_bill where bill_year=
+					(select max(bill_year) from tb_bill))
+	</select>
+	<!-- 本月整栋楼水费 -->
+	<select id="totalWaterFee" resultType="double">
+		select sum(water_fee) from tb_bill
+			where building_id = #{buildingId}
+			  and bill_month =
+				  (select max(bill_month) from tb_bill where bill_year=
+					(select max(bill_year) from tb_bill))
+	</select>
+	<!-- 本月整栋楼用电量 -->
+	<select id="totalEnergyUsed" resultType="double">
+		select sum(energy_used) from tb_bill
+			where building_id = #{buildingId}
+			  and bill_month =
+				  (select max(bill_month) from tb_bill where bill_year=
+					(select max(bill_year) from tb_bill))
+	</select>
+	<!-- 本月整栋楼电量 -->
+	<select id="totalEnergyFee" resultType="double">
+		select sum(energy_fee) from tb_bill
+			where building_id = #{buildingId}
+			  and bill_month =
+				  (select max(bill_month) from tb_bill where bill_year=
+					(select max(bill_year) from tb_bill))
+	</select>
+	<!-- 本月整栋楼水电总计 -->
+	<select id="totalFee" resultType="double">
+		select sum(total_fee) from tb_bill
+			where building_id = #{buildingId}
+			  and bill_month =
+			    (select max(bill_month) from tb_bill where bill_year=
+			    	(select max(bill_year) from tb_bill))
+	</select>
+
+
+
+	<!-- 3. 水电量历史数据 -->
+	<!-- 获取当前年份的最大月数 -->
+	<select id="queryLatestMonth" resultType="int">
+		select max(bill_month) from tb_bill where bill_year= (select max(bill_year) from tb_bill)
+	</select>
+
+	<!-- 获取当前年份 -->
+	<select id="queryLatestYear" resultType="int">
+		select max(bill_year) from tb_bill
+	</select>
+
+
+
+	<!-- 历史每月用水量 -->
+	<select id="historyWaterUsed" resultType="double">
+		select sum(water_used) from tb_bill
+		where building_id = #{buildingId} and bill_year = #{billYear} and bill_month = #{billMonth}
+	</select>
+
+	<select id="historyWaterFee" resultType="double">
+		select sum(water_fee) from tb_bill
+		where building_id = #{buildingId} and bill_year = #{billYear} and bill_month = #{billMonth}
+	</select>
+
+	<!-- 历史每月用电量 -->
+	<select id="historyEnergyUsed" resultType="double">
+		select sum(energy_used) from tb_bill
+		where building_id = #{buildingId} and bill_year = #{billYear} and bill_month = #{billMonth}
+	</select>
+
+	<select id="historyEnergyFee" resultType="double">
+		select sum(energy_fee) from tb_bill
+		where building_id = #{buildingId} and bill_year = #{billYear} and bill_month = #{billMonth}
+	</select>
+
+	<!-- 历史每月用电总量 -->
+	<select id="historyTotalUsed" resultType="double">
+		select sum(total_fee) from tb_bill
+		where building_id = #{buildingId} and bill_year = #{billYear} and bill_month = #{billMonth}
+	</select>
+
+
+
+	<insert id="addBillExcelFileToDatabase" parameterType="com.silk.entity.Bill" >
+		insert into tb_bill
+		(id,
+		 bill_year,
+		 bill_month,
+		 building_id,
+		 room_id,
+		 water_used,
+		 water_fee,
+		 energy_used,
+		 energy_fee,
+		 total_fee,
+		 paid)
+		values
+		(#{id},
+		 #{billYear},
+		 #{billMonth},
+		 #{buildingId},
+		 #{roomId},
+		 #{waterUsed},
+		 #{waterFee},
+		 #{energyUsed},
+		 #{energyFee},
+		 #{totalFee},
+		 #{paid})
+	</insert>
+
+</mapper>

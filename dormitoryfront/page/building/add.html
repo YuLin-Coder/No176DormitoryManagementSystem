@@ -1,0 +1,105 @@
+<div class="layuimini-main">
+    <div class="layui-form layuimini-form" style="width: 80%;margin-top: 20px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label required">楼栋编号</label>
+            <div class="layui-input-block">
+                <input type="text" name="id" lay-verify="required" lay-reqtext="楼栋号不能为空" placeholder="楼栋号" value="" class="layui-input">
+
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">楼栋名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="buildingName" lay-verify="required" lay-reqtext="楼栋名不能为空" placeholder="楼栋名" value="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">楼层总数</label>
+            <div class="layui-input-block">
+                <input type="text" name="floorNum" lay-verify="required" lay-reqtext="总层数不能为空" value="6" class="layui-input">
+                <tip>默认：6层</tip>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">学生性别</label>
+            <div class="layui-input-block">
+                <input type="radio" name="liverGender" value=0 title="女‍🙋🏻‍♀️" checked="">
+                <input type="radio" name="liverGender" value=1 title="男🙋🏻‍♂️">
+<!--                <input type="radio" name="gender" value=2 title="保密🤐">-->
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">宿管员</label>
+            <div class="layui-input-block">
+                <select name="managerId" id="managerId" lay-verify="required"></select>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="text-align: center;margin-top: 30px;">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    layui.use(['form', 'table', 'axios', 'miniAdmin'], function () {
+        let form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            axios = layui.axios,
+            miniAdmin = layui.miniAdmin,
+            $ = layui.$;
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        let parentIndex = layer.index;
+
+
+        let setting = {
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            check:{
+                enable: true
+            }
+        }
+
+        // 重点：从后端获取类型为1的用户信息，以备后续使用
+        axios.post('user/query',{userType:1}).then(function (response) {
+            let options = '<option value"">请选择宿管员</option>'
+            for (let obj of response.data){
+                options += '<option value="'+ obj.id + '">'+obj.userName + '</option>'
+            }
+            console.log(options);
+            $('#managerId').append(options);
+            form.render('select');
+        }).catch(function (error) {
+            console.log(error);
+        })
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            axios.post('building/create', data.field).then(function (response) {
+                if(response.code === 200){
+                    layer.msg(response.msg);                        // layer的成功提示
+                    window.reload();                                // 同上
+                }
+                layer.close(parentIndex);                           // 关闭弹出层
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+            return false;
+        });
+
+    });
+</script>

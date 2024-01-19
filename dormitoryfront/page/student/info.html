@@ -1,0 +1,78 @@
+<div class="layuimini-main">
+    <div class="layui-form layuimini-form" style="width: 30%;margin-top: 20px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label">学号</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="id" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="yourName" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">性别</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="gender" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">邮箱</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="email" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">楼栋</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="buildingId" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">房间</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="roomId" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">容量</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="roomCapacity" class="layui-input">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table', 'axios'], function () {
+        let form = layui.form,
+            layer = layui.layer,
+            axios = layui.axios,
+            $ = layui.$;
+
+
+        /**
+         * @imp 获取当前登录用户信息的方法
+         * @silkTag 请求学生的信息
+         */
+        axios.get('student/info',{}).then(function (response) {
+
+            console.log(response.data)
+            $('#id').val(response.data.id);
+            $('#yourName').val(response.data.userName);
+            $('#gender').val(response.data.gender===0?"女":"男");
+            $('#email').val(response.data.email);
+            $('#buildingId').val(response.data.room.buildingId);
+            $('#roomId').val(response.data.room.brand);
+            $('#roomCapacity').val(response.data.room.roomCapacity + '人间');
+
+        }).catch(function (error){
+            console.log(error)
+        })
+
+    });
+
+
+</script>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.IntentionMapper">
+
+	<resultMap type="com.silk.entity.Intention" id="Intention">
+		<id column="id" property="id"/>
+		<result column="stu_name"  property="stuName"/>
+		<result column="gender"  property="gender"/>
+		<result column="late" property="late"/>
+		<result column="noise" property="noise"/>
+		<result column="late_n_noise"  property="lateNNoise"/>
+	</resultMap>
+
+	<insert id="create" parameterType="com.silk.entity.Intention">
+		insert into tb_intention(
+		    id,
+			stu_name,
+			gender,
+		    late,
+		    noise,
+			late_n_noise
+		)values(
+		    #{id},
+			#{stuName},
+			#{gender},
+		    #{late},
+		    #{noise},
+			#{lateNNoise}
+		)
+	</insert>
+
+	<select id="query" resultMap="Intention">
+		select * from tb_intention
+		<include refid="IntentionFindCriteria"/>
+		order by late_n_noise asc
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_intention
+		<include refid="IntentionFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Intention">
+		select * from tb_intention where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_intention where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_intention set
+			stu_name=#{stuName},
+			gender=#{gender},
+		    late=#{late},
+		    noise=#{noise},
+			late_n_noise=#{lateNNoise}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_intention set
+			<if test="stuName != null and stuName != ''"> stu_name = #{stuName}</if>,
+			<if test="gender != null"> gender = #{gender}</if>,
+			<if test="late != null"> late = #{late}</if>,
+			<if test="noise != null"> noise = #{noise}</if>,
+			<if test="lateNNoise != null">late_n_noise = #{lateNNoise}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="IntentionFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="stuName != null and stuName != ''">and stu_name = #{stuName}</if>
+			<if test="gender != null">and gender = #{gender}</if>
+			<if test="late != null">and late = #{late}</if>
+			<if test="noise != null">and noise = #{noise}</if>
+			<if test="lateNNoise != null">and late_n_noise = #{lateNNoise}</if>
+		</where>
+	</sql>
+
+
+	<insert id="addIntentionExcelFileToDatabase" parameterType="com.silk.entity.Intention" >
+		insert into tb_intention
+		(id,
+		 stu_name,
+		 gender,
+		 late,
+		 noise,
+		 late_n_noise)
+		values
+		(#{id},
+		 #{stuName},
+		 #{gender},
+		 #{late},
+		 #{noise},
+		 #{lateNNoise})
+	</insert>
+
+	<!-- 查询女生数量 -->
+	<select id="queryFemaleAmount" resultType="int">
+		select count(*) from tb_intention where gender = 0
+	</select>
+
+	<!-- 查询男生数量 -->
+	<select id="queryMaleAmount" resultType="int">
+		select count(*) from tb_intention where gender = 1
+	</select>
+
+	<!-- -->
+	<select id="queryMaleIdByType" resultType="int">
+		select id from tb_intention where gender = 1 order by late_n_noise asc
+	</select>
+	<!-- -->
+
+	
+</mapper>

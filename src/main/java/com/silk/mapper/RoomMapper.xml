@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.RoomMapper">
+
+	<resultMap type="com.silk.entity.Room" id="Room">
+		<id column="id" property="id"/>
+		<result column="brand"  property="brand"/>
+		<result column="building_id"  property="buildingId"/>
+		<result column="floor"  property="floor"/>
+		<result column="room_capacity"  property="roomCapacity"/>
+		<result column="room_status"  property="roomStatus"/>
+		<result column="room_type"  property="roomType"/>
+		<result column="balance"  property="balance"/>
+	</resultMap>
+
+	<insert id="create" parameterType="com.silk.entity.Room">
+		insert into tb_room(
+		    id,
+			brand,
+			building_id,
+			floor,
+			room_capacity,
+			room_status,
+			room_type,
+		    balance
+		)values(
+		    concat(#{buildingId}, #{brand}),
+			#{brand},
+			#{buildingId},
+			#{floor},
+			#{roomCapacity},
+			#{roomStatus},
+			#{roomType},
+		    #{balance}
+		)
+	</insert>
+
+	<select id="query" resultMap="Room">
+		select * from tb_room
+		<include refid="RoomFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_room
+		<include refid="RoomFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Room">
+		select * from tb_room where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_room where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_room set
+			brand=#{brand},
+			building_id=#{buildingId},
+			floor=#{floor},
+			room_capacity=#{roomCapacity},
+			room_status=#{roomStatus},
+			room_type=#{roomType}
+			balance=#{balance}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_room set
+			<if test="brand != null">brand = #{brand}</if>,
+			<if test="buildingId != null">building_id = #{buildingId}</if>,
+			<if test="floor != null">floor = #{floor}</if>,
+			<if test="roomCapacity != null">room_capacity = #{roomCapacity}</if>,
+			<if test="roomStatus != null">room_status = #{roomStatus}</if>,
+			<if test="roomType != null">room_type = #{roomType}</if>
+			<if test="balance != null">balance = #{balance}</if>
+		where id = #{id}
+	</update>
+
+	<sql id="RoomFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="brand != null">and brand = #{brand}</if>
+			<if test="buildingId != null">and building_id = #{buildingId}</if>
+			<if test="floor != null">and floor = #{floor}</if>
+			<if test="roomCapacity != null">and room_capacity = #{roomCapacity}</if>
+			<if test="roomStatus != null">and room_status = #{roomStatus}</if>
+			<if test="roomType != null">and room_type = #{roomType}</if>
+			<if test="balance != null">and balance = #{balance}</if>
+		</where>
+	</sql>
+
+
+	<update id="capacityPlusOne">
+		update tb_room set room_capacity = room_capacity + 1 where id = #{id}
+	</update>
+
+	<update id="capacityMinusOne">
+		update tb_room set room_capacity = room_capacity - 1 where id = #{id}
+	</update>
+
+	<select id="buildingTotalStudentBedAmount" resultType="int">
+		select sum(room_capacity) from tb_room where building_id = #{buildingId} and room_type = 0
+	</select>
+
+	<select id="queryRoomBalance" resultType="double">
+		select balance from tb_room where id = #{roomId}
+	</select>
+
+
+	<!-- 在用户记下一笔新账后改变账户余额 -->
+	<update id="changeBalance">
+		update tb_room set balance = #{newBalance} where id = #{roomId}
+	</update>
+
+	<!-- 查询某栋楼的学生床位总数 -->
+	<select id="queryTotalStuBed" resultType="int">
+		select sum(room_capacity) from tb_room where building_id = #{buildingId} and room_type = 0
+	</select>
+
+<!--	<select id="queryTotalStuRoom" resultType="int">-->
+<!--		select count(*) from tb_room where building_id = #{buildingId} and room_type = 0-->
+<!--	</select>-->
+
+	<!-- 查询有空床位的学生房间ID -->
+	<select id="queryEachStuRoomId" resultType="int">
+		select id from tb_room
+		where building_id = #{buildingId}
+		  and room_type = 0
+		  and (room_capacity - (select count(*) from tb_user where room_id = tb_room.id)) > 0;
+	</select>
+
+
+	<!-- 查询学生房间的空床位数量 -->
+	<select id="queryEachStuRoomFreeBedAmount" resultType="int">
+		select (room_capacity - (select count(*) from tb_user where room_id = #{roomId}))
+		from tb_room
+		where id = #{roomId}
+	</select>
+
+</mapper>

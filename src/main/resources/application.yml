@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/no176_playme?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 123456
+  jackson:
+    date-format: yyyy年MM月dd日
+
+server:
+  port: 8080
+  servlet:
+    context-path: /dormitory
+
+mybatis:
+  mapper-locations: com/silk/mapper/*.xml
+
+logging:
+  level:
+    com:
+      silk:
+        mapper: debug
+
+pagehelper:
+  helper-dialect: mysql       # 根据方言来选择合适的分页方式

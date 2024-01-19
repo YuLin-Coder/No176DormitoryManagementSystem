@@ -1,0 +1,241 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <div style="margin: 10px 10px 10px 10px">
+            <form class="layui-form layui-form-pane" action="">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">学号/工号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="id" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label">姓名</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="userName" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+<!--                    <div class="layui-inline">-->
+<!--                        <label class="layui-form-label">用户类型</label>-->
+<!--                        <div class="layui-input-inline">-->
+<!--                            <input type="text" name="userType" autocomplete="off" class="layui-input">-->
+<!--                        </div>-->
+<!--                    </div>-->
+                    <div class="layui-inline">
+                        <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add">
+                    <i class="layui-icon layui-icon-add-circle"></i>添加
+                </button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="update">
+                    <i class="layui-icon layui-icon-edit"></i>修改
+                </button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete">
+                    <i class="layui-icon layui-icon-delete"></i>删除
+                </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+<!--        <script type="text/html" id="currentTableBar">-->
+<!--            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>-->
+<!--            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>-->
+<!--        </script>-->
+
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','miniAdmin','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniAdmin = layui.miniAdmin,
+            miniPage = layui.miniPage;
+
+        table.render({
+            elem: '#currentTableId',
+            method: 'post',
+            url: 'user/query',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', width: 120, title: 'ID', sort: true},
+                {field: 'userName', title: '姓名'},
+                {field: 'gender', title: '性别', sort: true, templet:function (row) {
+                        if(row.gender === 0){
+                            return '<span class="layui-badge layui-bg-silk-pink">女</span>';
+                        } else {
+                            return '<span class=\"layui-badge layui-bg-silk-blue\">男</span>';
+                        }
+                    }},
+                {field: 'email', title: '邮箱'},
+                {field: 'roomId', title: '房间ID', minWidth: 150},
+                {field: 'userType', title: '用户类型', sort: true, templet:function (row) {
+                        if (row.userType === 0){
+                            return '学生';
+                        } else if (row.userType === 1){
+                            return '<span class="layui-badge layui-bg-blue">宿管员</span>';
+                        } else if (row.userType === 2){
+                            return '<span class="layui-badge layui-bg-orange">后勤中心</span>';
+                        }
+                    }}
+                // {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 30, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+
+        
+        window.reload = function () {
+            table.reload('currentTableId');     // 刷新表格
+        }
+        
+        
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var result = JSON.stringify(data.field);
+
+            //----------------
+            // 弹出（去掉）
+            // layer.alert(result, {
+            //     title: '最终的搜索信息'
+            // });
+
+            //执行搜索重载
+            table.reload('currentTableId', {
+                where: data.field
+            }, 'data');
+
+            return false;
+        });
+
+        /**
+         * toolbar事件监听
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {                                      // 🌸监听添加操作
+                let content = miniPage.getHrefContent('user/add.html');     // ajax异步获取
+                let openWH = miniPage.getOpenWidthHeight();
+                let index = layer.open({
+                    title: '添加用户',
+                    type: 1,
+                    shade: 0.3,
+                    maxmin:true,                    // 显示最大最小化的按钮
+                    shadeClose: true,
+                    area: ['600px', '600px'],       // 原始值 area: [openWH[0] + 'px', openWH[1] + 'px'],
+                    offset: 'auto',                 // 原始值 offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                    content: content,
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            } else if (obj.event === 'update') {                            // 🌸监听修改操作
+                let data = table.checkStatus('currentTableId').data;
+                if (data.length === 0){
+                    layer.msg("还没有选中数据");
+                } else if (data.length !== 1) {
+                    layer.msg("只能选择一条数据进行修改");
+                } else {
+                    let content = miniPage.getHrefContent('user/update.html');     // ajax异步获取
+                    let openWH = miniPage.getOpenWidthHeight();
+                    let index = layer.open({
+                        title: '编辑用户',
+                        type: 1,
+                        shade: 0.3,
+                        maxmin:true,                    // 显示最大最小化的按钮
+                        shadeClose: true,
+                        area: ['600px', '600px'],       // 原始值 area: [openWH[0] + 'px', openWH[1] + 'px'],
+                        offset: 'auto',                 // 原始值 offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                        content: content,
+                    });
+                    setFormValue(data[0]);              // 给弹出的修改表单赋值
+                    $(window).on("resize", function () {
+                        layer.full(index);
+                    });
+                }
+            } else if (obj.event === 'delete') {                            // 🌸监听修改操作
+                let data = table.checkStatus('currentTableId').data;
+                if (data.length === 0){
+                    layer.msg("还没有选中数据");
+                } else{
+                    layer.confirm("真的要删除吗", function (index) {
+                        let arr = data.map(item=>item.id);                   // 异步删除(包括map, filter, some, every)
+
+                        axios.get('user/delete?ids=' + arr.join(",")).then(function (response) {
+                            table.reload('currentTableId');
+                            layer.msg(response.msg);
+                        }).catch(function (error) {
+                            layer.msg(error);
+                        });
+                        layer.close(index);
+                    })
+                }
+            }
+        });
+
+        
+        function setFormValue(data) {               // 给弹出的修改表单赋值
+            form.val("updateForm", {
+                id: data.id,
+                userName: data.userName,
+                gender: data.gender,
+                email: data.email,
+                roomId: data.roomId,
+                userType: data.userType,
+            })
+        }
+        
+        
+
+        //
+        // //监听表格复选框选择
+        // table.on('checkbox(currentTableFilter)', function (obj) {
+        //     console.log(obj)
+        // });
+        //
+        // table.on('tool(currentTableFilter)', function (obj) {
+        //     var data = obj.data;
+        //     if (obj.event === 'edit') {
+        //
+        //         var content = miniPage.getHrefContent('page/table/add.html');
+        //         var openWH = miniPage.getOpenWidthHeight();
+        //
+        //         var index = layer.open({
+        //             title: '编辑用户',
+        //             type: 1,
+        //             shade: 0.2,
+        //             maxmin:true,
+        //             shadeClose: true,
+        //             area: [openWH[0] + 'px', openWH[1] + 'px'],
+        //             offset: [openWH[2] + 'px', openWH[3] + 'px'],
+        //             content: content,
+        //         });
+        //         $(window).on("resize", function () {
+        //             layer.full(index);
+        //         });
+        //         return false;
+        //     } else if (obj.event === 'delete') {
+        //         layer.confirm('真的删除行么', function (index) {
+        //             obj.del();
+        //             layer.close(index);
+        //         });
+        //     }
+        // });
+
+    });
+</script>

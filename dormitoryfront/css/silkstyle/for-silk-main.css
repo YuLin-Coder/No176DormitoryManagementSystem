@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css?family=Coiny');
+
+
+body {
+    background: #ffffff;
+}
+.cloud-text {
+    font-family: 'Coiny', cursive;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /*background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/769286/clouds.jpg);*/
+    background-image: url("../../images/bicycle-outside-apartment-building.jpg");
+    background-size: auto;
+    background-attachment: unset;
+    background-position: 0%;
+    width: 80%;
+    margin: 10%;
+    font-size: 134px;
+    animation: clouds-moving infinite 220s;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+    animation-timing-function: linear;
+    text-align: center;
+}
+@keyframes clouds-moving {
+    0% {
+        background-position: 0%;
+    }
+    50% {
+        background-position: 100%;
+    }
+    100% {
+        background-position: 0%;
+    }
+}
+.attribute {
+    position: relative;
+    font-size: 26px;
+    padding-top: 60px;
+    text-align: center;
+}

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silk.mapper.ExchangeMapper">
+
+	<resultMap type="com.silk.entity.Exchange" id="Exchange">
+		<id column="id" property="id"/>
+		<result column="stu_id"  property="stuId"/>
+		<result column="stu_name"  property="stuName"/>
+		<result column="gender"  property="gender"/>
+		<result column="building_id"  property="buildingId"/>
+		<result column="room_id"  property="roomId"/>
+		<result column="ex_reason"  property="exReason"/>
+		<result column="ex_intention" property="exIntention"/>
+		<result column="ex_date" property="exDate"/>
+		<result column="ex_status"  property="exStatus"/>
+	</resultMap>
+
+	<insert id="create" keyProperty="id" useGeneratedKeys="true" parameterType="com.silk.entity.Exchange">
+		insert into tb_exchange(
+			stu_id,
+			stu_name,
+			gender,
+			building_id,
+			room_id,
+			ex_reason,
+		    ex_intention,
+			ex_date,
+			ex_status
+		)values(
+			#{stuId},
+			#{stuName},
+			#{gender},
+			#{buildingId},
+			#{roomId},
+			#{exReason},
+		    #{exIntention},
+		    #{exDate},
+			#{exStatus}
+		)
+	</insert>
+
+	<select id="query" resultMap="Exchange">
+		select * from tb_exchange
+		<include refid="ExchangeFindCriteria"/>
+	</select>
+
+	<select id="count" resultType="int">
+		select count(1) from tb_exchange
+		<include refid="ExchangeFindCriteria"/>
+	</select>
+
+	<select id="detail" resultMap="Exchange">
+		select * from tb_exchange where id = #{id}
+	</select>
+
+	<delete id="delete">
+		delete from tb_exchange where id = #{id}
+	</delete>
+	<update id="update">
+		update tb_exchange set
+			stu_id=#{stuId},
+			stu_name=#{stuName},
+			gender=#{gender},
+			building_id=#{buildingId},
+			room_id=#{roomId},
+			ex_reason=#{exReason},
+		    ex_intention=#{exIntention},
+			ex_date=#{exDate},
+			ex_status=#{exStatus}
+		where id = #{id}
+	</update>
+
+	<update id="updateSelective">
+		update tb_exchange
+		    <set>
+				<if test="stuId != null">stu_id = #{stuId},</if>
+				<if test="stuName != null and stuName != ''"> stu_name = #{stuName},</if>
+				<if test="gender != null">gender = #{gender},</if>
+				<if test="buildingId != null">building_id = #{buildingId},</if>
+				<if test="roomId != null">room_id = #{roomId},</if>
+				<if test="exReason != null and exReason != ''"> ex_reason = #{exReason},</if>
+				<if test="exIntention != null and exIntention != ''"> ex_intention = #{exIntention},</if>
+				<if test="exDate != null and exDate != ''"> ex_date = #{exDate},</if>
+				<if test="exStatus != null">ex_status = #{exStatus},</if>
+			</set>
+		where id = #{id}
+	</update>
+
+	<sql id="ExchangeFindCriteria">
+		<where>
+			<if test="id != null">and id = #{id}</if>
+			<if test="stuId != null">and stu_id = #{stuId}</if>
+			<if test="stuName != null and stuName != ''">and stu_name = #{stuName}</if>
+			<if test="gender != null">and gender = #{gender}</if>
+			<if test="buildingId != null">and building_id = #{buildingId}</if>
+			<if test="roomId != null">and room_id = #{roomId}</if>
+			<if test="exReason != null and exReason != ''">and ex_reason = #{exReason}</if>
+			<if test="exIntention != null and exIntention != ''">and ex_intention = #{exIntention}</if>
+			<if test="exDate != null and exDate != ''">and ex_date = #{exDate}</if>
+			<if test="exStatus != null">and ex_status = #{exStatus}</if>
+		</where>
+	</sql>
+
+</mapper>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+    <div class="layuimini-main">
+        <h1>导入EXCEL</h1>
+        <button type="button" class="layui-btn" id="test3" name="fileName"><i class="layui-icon"></i>上传文件</button>
+
+<!--        <input type="file" name="fileName1" id="fileName1"/>-->
+<!--        <input type="button" id="uploadExcelBtn" value="提交" />-->
+
+
+<!--        <form class="form-horizontal" id="form_table" action="http://localhost:8080/dormitory/bill/upload" enctype="multipart/form-data" method="post">-->
+<!--            <button type="submit" class="btn btn-primary">导入</button>-->
+<!--            <input class="form-input" type="file" name="filename">-->
+<!--        </form>-->
+
+
+
+
+<!--        <div class="layui-form layuimini-form" enctype="multipart/form-data" style="width: 80%;margin-top: 20px;" lay-filter="addRoomForm">-->
+<!--            <div class="layui-form-item">-->
+<!--&lt;!&ndash;                <button type="submit" class="btn btn-primary">导入</button>&ndash;&gt;-->
+<!--                <div class="layui-input-block">-->
+<!--                    <input class="form-input" type="file" name="fileName">-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="layui-form-item" style="text-align: center;margin-top: 30px;">-->
+<!--                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        <div class="layui-form layuimini-form" enctype="multipart/form-data" style="width: 80%;margin-top: 20px;" lay-filter="addRoomForm">-->
+<!--            <div class="layui-form-item">-->
+<!--                <label class="layui-form-label layui-hide"></label>-->
+<!--                <div class="layui-input-block">-->
+<!--                    &lt;!&ndash; 获取list页面传过来的楼栋ID与楼层数 &ndash;&gt;-->
+<!--                    <input type="hidden" id="buildingId" name="buildingId">-->
+<!--                    <input type="hidden" id="floor" name="floor">-->
+
+<!--                    <input type="hidden" id="id" name="id" lay-reqtext="宿舍编号不能为空"-->
+<!--                           placeholder="请输入宿舍编号" value="" class="layui-input">-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="layui-form-item">-->
+<!--                <label class="layui-form-label required">门牌号</label>-->
+<!--                <div class="layui-input-block">-->
+<!--                    <input type="text" id="brand" name="brand" lay-verify="required" lay-reqtext="门牌号不能为空"-->
+<!--                           placeholder="请输入门牌号" value="" class="layui-input">-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="layui-form-item" style="text-align: center;margin-top: 30px;">-->
+<!--                <div class="layui-input-block">-->
+<!--                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+
+    </div>
+</body>
+
+<script>
+    layui.use(['form', 'table', 'axios', 'miniAdmin', 'upload', 'storage'], function () {
+        let form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            axios = layui.axios,
+            miniAdmin = layui.miniAdmin,
+            upload = layui.upload,
+            storage = layui.storage,
+            $ = layui.$;
+
+
+
+        // var req = new XMLHttpRequest();
+        // req.open('GET', document.location, false);
+        // req.send(null);
+        // var headers = req.getAllResponseHeaders().toLowerCase();
+        // alert(headers.token);
+        console.log(storage.getToken());
+
+
+
+        upload.render({
+            elem: '#test3'
+            // ,headers: {token: storage.getToken()}
+            ,url: 'bill/upload' //改成您自己的上传接口
+            ,method: 'post'
+            ,accept: 'file' //普通文件
+            ,done: function(res){
+                layer.msg('上传成功');
+                console.log(res);
+            }
+        });
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        let parentIndex = layer.index;
+
+
+
+        // $('#uploadExcelBtn').click(function () {
+        //     var $file1 = $("input[name='fileName1']").val();//用户文件内容(文件)
+        //     // 判断文件是否为空
+        //     if ($file1 == "") {
+        //         alert("请选择上传的目标文件! ")
+        //         return false;
+        //     }
+        //     //判断文件类型,我这里根据业务需求判断的是Excel文件
+        //     var fileName1 = $file1.substring($file1.lastIndexOf(".") + 1).toLowerCase();
+        //     if(fileName1 != "xls" && fileName1 !="xlsx"){
+        //         alert("请选择Execl文件!");
+        //         return false;
+        //     }
+        //     //判断文件大小
+        //     var size1 = $("input[name='fileName1']")[0].files[0].size;
+        //     if (size1>104857600) {
+        //         alert("上传文件不能大于100M!");
+        //         return false;
+        //     }
+        //
+        //     boo1 = true;
+        //     var type = "file";
+        //     var formData = new FormData();//这里需要实例化一个FormData来进行文件上传
+        //     formData.append(type,$("#fileName1")[0].files[0]);
+        //
+        //     axios({
+        //         type : "post",
+        //         url : "bill/upload",
+        //         data : formData,
+        //         processData : false,
+        //         contentType : 'multipart/form-data',
+        //     }).then(function (response) {
+        //         if(response.code === 200){
+        //             layer.msg(response.msg);                        // layer的成功提示
+        //         }
+        //     }).catch(function (error) {
+        //         layer.msg(error);
+        //     })
+        // })
+
+
+
+        // $('#uploadExcelBtn').click(function () {
+        //     alert("上传")
+        //     let file = document.getElementsByName('fileName1')[0].files[0];
+        //
+        //     let formData = new FormData();
+        //     formData.append("uploadFile",file,file.name);
+        //
+        //     const config = {
+        //         // headers: { "Content-Type": "multipart/form-data;boundary="+new Date().getTime() }
+        //         headers: { "Content-Type": "multipart/form-data"}
+        //     };
+        //
+        //     axios
+        //         .post("/bill/upload",formData,config)
+        //         .then(function (response) {
+        //             console.log(response);
+        //         })
+        //         .catch(function (error) {
+        //             console.log(error);
+        //         });
+        // });
+
+
+        //
+        // 监听提交
+        // form.on('submit(saveBtn)', function (data) {
+        //     axios.post('bill/upload', data.field).then(function (response) {
+        //         if(response.code === 200){
+        //             layer.msg(response.msg);                        // layer的成功提示
+        //             window.reload();                                // 同上
+        //         }
+        //         layer.close(parentIndex);                           // 关闭弹出层
+        //     }).catch(function (error) {
+        //         layer.msg(error);
+        //     });
+        //     return false;
+        // });
+
+    });
+
+
+    // import Axios from 'axios'
+    //
+    //
+    // form.on('submit(saveBtn)', function (data) {
+    //     Axios.post('bill/upload', data.field).then(function (response) {
+    //         if(response.code === 200){
+    //             layer.msg(response.msg);                        // layer的成功提示
+    //             window.reload();                                // 同上
+    //         }
+    //         layer.close(parentIndex);                           // 关闭弹出层
+    //     }).catch(function (error) {
+    //         layer.msg(error);
+    //     });
+    //     return false;
+    // });
+</script>
+
+</html>
